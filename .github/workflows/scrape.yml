@@ -1,0 +1,43 @@
+name: Scrape Recalls
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run daily at midnight UTC
+  workflow_dispatch: # Allow manual triggers
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+          
+      # If you don't use .python-version, you can specify explicit version:
+      #  python-version: "3.10" 
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run Scraper
+        run: PYTHONPATH=. uv run src/main.py
+        
+      - name: Save JSON Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: processed-data
+          path: data/processed.json
+          
+      # Placeholder for pushing to Cloudflare R2
+      # You can use tools like rclone or aws-cli pointing to R2 endpoint
+      - name: Upload to Cloudflare R2 (Placeholder)
+        run: |
+          echo "Add logic to push data/processed.json to Cloudflare R2 here."
