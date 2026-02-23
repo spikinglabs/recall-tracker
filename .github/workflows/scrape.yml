@@ -47,3 +47,7 @@ jobs:
             data/processed.json \
             s3://${{ vars.R2_BUCKET_NAME }}/baby/scraped_date=$SCRAPED_DATE/processed.json \
             --endpoint-url https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          aws s3 cp \
+            data/processed.json \
+            s3://${{ vars.R2_BUCKET_NAME }}/baby/scraped_date=latest/processed.json \
+            --endpoint-url https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
