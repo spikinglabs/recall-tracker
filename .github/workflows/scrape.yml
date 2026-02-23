@@ -42,7 +42,8 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: auto
         run: |
+          SCRAPED_DATE=$(date -u +"%Y-%m-%d")
           aws s3 cp \
             data/processed.json \
-            s3://${{ vars.R2_BUCKET_NAME }}/baby/latest.json \
+            s3://${{ vars.R2_BUCKET_NAME }}/baby/scraped_date=$SCRAPED_DATE/processed.json \
             --endpoint-url https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
