@@ -27,6 +27,8 @@ def test_germany_scraper_parse():
     assert recall.title == 'Spielfiguren "Stretcherz Slammerz"'
     assert recall.url == "https://www.lebensmittelwarnung.de/example.html"
     assert recall.publish_datetime is not None
+    assert recall.publish_date == "2026-02-20"
+    assert recall.scraped_datetime is not None
     assert recall.country_sold_in == "DE"
     assert recall.source == "Lebensmittelwarnung.de"
     assert recall.reason == "Gesundheitsschädliche Substanz"

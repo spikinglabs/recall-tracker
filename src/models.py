@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from datetime import datetime
+from pydantic import BaseModel, Field, computed_field
+from datetime import datetime, timezone
 from typing import Optional, List
 
 class RecallInfo(BaseModel):
@@ -13,3 +13,10 @@ class RecallInfo(BaseModel):
     reason: Optional[str] = None
     company: Optional[str] = None
     annotation: Optional[str] = None
+    scraped_datetime: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    @computed_field
+    def publish_date(self) -> str:
+        """String representation of publish_datetime (YYYY-MM-DD) useful for partitioning"""
+        return self.publish_datetime.strftime("%Y-%m-%d")
+
