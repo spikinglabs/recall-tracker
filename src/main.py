@@ -1,6 +1,8 @@
 import json
 import os
 from datetime import datetime
+from deep_translator import GoogleTranslator
+from datetime import datetime
 from src.scrapers.germany import GermanyScraper
 from src.scrapers.fda import FDAScraper
 
@@ -26,6 +28,35 @@ def main():
     from datetime import timezone
     all_recalls.sort(key=lambda x: x.publish_datetime if x.publish_datetime else datetime.min.replace(tzinfo=timezone.utc), reverse=True)
     
+    # Translate specific fields into desired languages
+    target_langs = ['en', 'de', 'es', 'fr', 'zh-CN']
+    translators = {lang: GoogleTranslator(source='auto', target=lang) for lang in target_langs}
+    
+    print("Translating data...")
+    for i, recall in enumerate(all_recalls):
+        if i % 10 == 0:
+            print(f"Translating record {i}/{len(all_recalls)}...")
+            
+        def translate_text(text):
+            if not text:
+                return None
+            
+            # If it's already a dictionary (from an older run perhaps), we skip for now 
+            # (though the scrapers return it as strings natively so here we just handle strings)
+            if isinstance(text, dict):
+                return text
+                
+            translations = {}
+            for lang in target_langs:
+                try:
+                    translations[lang] = translators[lang].translate(text)
+                except Exception as e:
+                    print(f"Translation error to {lang}: {e}")
+                    translations[lang] = text # fallback
+            return translations
+            
+        recall.reason = translate_text(recall.reason)
+        recall.annotation = translate_text(recall.annotation)    
     # Ensure output directory exists
     os.makedirs("data", exist_ok=True)
     

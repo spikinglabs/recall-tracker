@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'preact/hooks'
 import { RecallList } from './components/RecallList'
 import { SearchBar } from './components/SearchBar'
+import { translations } from './translations'
 import './index.css'
 
 const DATA_URL = 'https://pub-f36c3831e82845e4af2d54940ea6c32d.r2.dev/baby/scraped_date%3Dlatest/processed.json'
@@ -11,6 +12,9 @@ export function App() {
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState(() => {
     return localStorage.getItem('searchQuery') || ''
+  })
+  const [lang, setLang] = useState(() => {
+    return localStorage.getItem('appLang') || 'en'
   })
   const [selectedCountry, setSelectedCountry] = useState(() => {
     return localStorage.getItem('selectedCountry') || 'All'
@@ -28,6 +32,10 @@ export function App() {
   useEffect(() => {
     localStorage.setItem('selectedCountry', selectedCountry)
   }, [selectedCountry])
+
+  useEffect(() => {
+    localStorage.setItem('appLang', lang)
+  }, [lang])
 
   useEffect(() => {
     localStorage.setItem('searchQuery', searchQuery)
@@ -72,20 +80,47 @@ export function App() {
 
   const filteredRecalls = recalls.filter(recall => {
     const query = searchQuery.toLowerCase()
+
+    // Safely get the localized reason or annotation if it's a dict, or fallback to original string
+    const getLocal = (field) => {
+      if (!field) return ''
+      if (typeof field === 'string') return field
+      return field[lang] || field['en'] || Object.values(field)[0] || ''
+    }
+
+    const titleCmp = (recall.title || '').toLowerCase()
+    const compCmp = (recall.company || '').toLowerCase()
+    const reasonCmp = getLocal(recall.reason).toLowerCase()
+
     const matchesSearch = (
-      (recall.title && recall.title.toLowerCase().includes(query)) ||
-      (recall.company && recall.company.toLowerCase().includes(query)) ||
-      (recall.reason && recall.reason.toLowerCase().includes(query))
+      titleCmp.includes(query) ||
+      compCmp.includes(query) ||
+      reasonCmp.includes(query)
     )
     const matchesCountry = selectedCountry === 'All' || recall.country_sold_in === selectedCountry
 
     return matchesSearch && matchesCountry
   })
+
+  const t = translations[lang] || translations['en']
   return (
     <main>
-      <header>
-        <h1>Recall Tracker</h1>
-        <p class="subtitle">Stay informed about the latest product recalls.</p>
+      <header class="app-header">
+        <div>
+          <h1>{t.title}</h1>
+          <p class="subtitle">{t.subtitle}</p>
+        </div>
+        <select
+          class="lang-select"
+          value={lang}
+          onChange={(e) => setLang(e.target.value)}
+        >
+          <option value="en">English (EN)</option>
+          <option value="de">Deutsch (DE)</option>
+          <option value="es">Español (ES)</option>
+          <option value="fr">Français (FR)</option>
+          <option value="zh-CN">中文 (ZH)</option>
+        </select>
       </header>
 
       <SearchBar
@@ -96,13 +131,14 @@ export function App() {
         countries={uniqueCountries}
         selectedCountry={selectedCountry}
         onCountryChange={setSelectedCountry}
+        t={t}
       />
 
-      {loading && <p>Loading recall data...</p>}
-      {error && <p>Error loading data: {error}</p>}
+      {loading && <p>{t.loading}</p>}
+      {error && <p>{t.error} {error}</p>}
 
       {!loading && !error && (
-        <RecallList recalls={filteredRecalls} />
+        <RecallList recalls={filteredRecalls} t={t} lang={lang} />
       )}
     </main>
   )

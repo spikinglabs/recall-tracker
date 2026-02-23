@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'preact/hooks'
 
-export function SearchBar({ query, onSearch, onSaveHistory, searchHistory, countries, selectedCountry, onCountryChange }) {
+export function SearchBar({ query, onSearch, onSaveHistory, searchHistory, countries, selectedCountry, onCountryChange, t }) {
     const [isFocused, setIsFocused] = useState(false)
     const containerRef = useRef(null)
 
@@ -34,7 +34,7 @@ export function SearchBar({ query, onSearch, onSaveHistory, searchHistory, count
                 <input
                     type="text"
                     class="search-input"
-                    placeholder="Search by product, company, or reason... (Press Enter to save to history)"
+                    placeholder={t.searchPlaceholder}
                     value={query}
                     onInput={(e) => onSearch(e.target.value)}
                     onFocus={() => setIsFocused(true)}
@@ -68,7 +68,7 @@ export function SearchBar({ query, onSearch, onSaveHistory, searchHistory, count
                 >
                     {countries.map(country => (
                         <option key={country} value={country}>
-                            {country === 'All' ? 'All Countries' : country}
+                            {country === 'All' ? t.allCountries : country}
                         </option>
                     ))}
                 </select>
