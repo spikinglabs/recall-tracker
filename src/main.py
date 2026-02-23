@@ -24,7 +24,7 @@ def main():
 
     # Process and sort by publish date
     from datetime import timezone
-    all_recalls.sort(key=lambda x: x.publish_date if x.publish_date else datetime.min.replace(tzinfo=timezone.utc), reverse=True)
+    all_recalls.sort(key=lambda x: x.publish_datetime if x.publish_datetime else datetime.min.replace(tzinfo=timezone.utc), reverse=True)
     
     # Ensure output directory exists
     os.makedirs("data", exist_ok=True)

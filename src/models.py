@@ -6,7 +6,7 @@ class RecallInfo(BaseModel):
     id: str  # Unique identifier for the recall
     title: str
     url: str
-    publish_date: datetime
+    publish_datetime: datetime
     country_sold_in: str  # e.g., "DE", "US"
     location_sold_in: Optional[List[str]] = None  # e.g. states or cities
     source: str  # e.g., "Lebensmittelwarnung", "FDA"

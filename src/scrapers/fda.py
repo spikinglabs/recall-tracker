@@ -79,7 +79,7 @@ class FDAScraper(BaseScraper):
                 id=recall_id,
                 title=title,
                 url=url,
-                publish_date=pub_date,
+                publish_datetime=pub_date,
                 country_sold_in=self.country_code,
                 location_sold_in=None,  # FDA table doesn't easily show locations
                 source=self.source_name,

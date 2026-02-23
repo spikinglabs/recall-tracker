@@ -56,6 +56,6 @@ def test_fda_scraper_parse_and_filter():
     assert recall.reason == "Potential contamination"
     assert recall.company == "SafeBaby Inc."
     assert "Infant Formula" in recall.annotation
-    assert recall.publish_date.year == 2026
-    assert recall.publish_date.month == 2
-    assert recall.publish_date.day == 20
+    assert recall.publish_datetime.year == 2026
+    assert recall.publish_datetime.month == 2
+    assert recall.publish_datetime.day == 20

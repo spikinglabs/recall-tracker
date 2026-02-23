@@ -65,7 +65,7 @@ class GermanyScraper(BaseScraper):
                 id=guid,
                 title=title,
                 url=link,
-                publish_date=pubDate,
+                publish_datetime=pubDate,
                 country_sold_in=self.country_code,
                 location_sold_in=locations,
                 source=self.source_name,
