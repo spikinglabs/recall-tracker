@@ -45,4 +45,4 @@ jobs:
           aws s3 cp \
             data/processed.json \
             s3://${{ vars.R2_BUCKET_NAME }}/baby/latest.json \
-            --endpoint-url https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+            --endpoint-url https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
