@@ -1,63 +1,42 @@
-import pytest
-from datetime import datetime
+import json
+from datetime import datetime, timedelta, timezone
 from src.scrapers.fda import FDAScraper
-from src.models import RecallInfo
 
-MOCK_HTML = """
-<html>
-<body>
-    <table>
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Brand Name(s)</th>
-                <th>Product Description</th>
-                <th>Product Type</th>
-                <th>Recall Reason Description</th>
-                <th>Company Name</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>02/20/2026</td>
-                <td><a href="/safety/recalls/fake-baby-formula">SafeBaby</a></td>
-                <td>Infant Formula</td>
-                <td>Food & Beverages</td>
-                <td>Potential contamination</td>
-                <td>SafeBaby Inc.</td>
-            </tr>
-            <tr>
-                <td>02/19/2026</td>
-                <td><a href="/safety/recalls/fake-adult-snack">AdultSnack</a></td>
-                <td>Spicy Chips</td>
-                <td>Food & Beverages</td>
-                <td>Undeclared allergen</td>
-                <td>Snack Corp</td>
-            </tr>
-        </tbody>
-    </table>
-</body>
-</html>
-"""
+TODAY = datetime.now(timezone.utc).strftime("%m/%d/%Y")
+OLD = (datetime.now(timezone.utc) - timedelta(days=800)).strftime("%m/%d/%Y")
+
+
+def row(date, brand, desc, reason, company, path):
+    return {
+        "path": path,
+        "field_change_date_2": date,
+        "field_brand_name": f'<a href="{path}">{brand}</a>',
+        "field_product_description": desc,
+        "field_recall_reason_description": reason,
+        "field_recall_reason": "Other",
+        "field_company_name": company,
+        "field_regulated_product_field": "Food &amp; Beverages",
+    }
+
+
+MOCK_JSON = json.dumps([
+    row(TODAY, "Babies&#039; Magic Tea", "Babies&#039; Magic Tea brand Baby Sleep Gripe Water 4 oz bottle", "Undeclared ethanol", "Pacific Health Sciences", "/safety/recalls/gripe-water"),
+    row(TODAY, "BeanCo", "Canned kidney beans", "Undeclared allergen", "Bean Corp", "/safety/recalls/kidney-beans"),
+    row(OLD, "SafeBaby", "Infant Formula", "Potential contamination", "SafeBaby Inc.", "/safety/recalls/old-formula"),
+])
+
 
 def test_fda_scraper_parse_and_filter():
-    scraper = FDAScraper()
-    recalls = scraper.parse_data(MOCK_HTML)
-    
-    # Should only return the baby related recall
+    recalls = FDAScraper().parse_data(MOCK_JSON)
+
+    # Only the recent baby recall: "kidney" is not "kid", and old recalls are left out
     assert len(recalls) == 1
     recall = recalls[0]
-    
-    assert recall.id == "https://www.fda.gov/safety/recalls/fake-baby-formula"
-    assert recall.title == "SafeBaby"
-    assert recall.url == "https://www.fda.gov/safety/recalls/fake-baby-formula"
+    assert recall.id == "https://www.fda.gov/safety/recalls/gripe-water"
+    assert recall.url == recall.id
+    assert recall.title == "Babies' Magic Tea brand Baby Sleep Gripe Water 4 oz bottle"
+    assert recall.annotation == "Brand: Babies' Magic Tea"
     assert recall.country_sold_in == "US"
     assert recall.source == "FDA"
-    assert recall.reason == "Potential contamination"
-    assert recall.company == "SafeBaby Inc."
-    assert "Infant Formula" in recall.annotation
-    assert recall.publish_datetime.year == 2026
-    assert recall.publish_datetime.month == 2
-    assert recall.publish_datetime.day == 20
-    assert recall.publish_date == "2026-02-20"
-    assert recall.scraped_datetime is not None
+    assert recall.reason == "Undeclared ethanol"
+    assert recall.company == "Pacific Health Sciences"

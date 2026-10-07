@@ -5,10 +5,15 @@ on:
     - cron: '0 0 * * *' # Run daily at midnight UTC
   workflow_dispatch: # Allow manual triggers
 
+permissions:
+  contents: read
+  actions: write # to keep this schedule switched on (see the last step)
+
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 40
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -27,8 +32,11 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
+      - name: Test
+        run: PYTHONPATH=. uv run pytest -q
+
       - name: Run Scraper
-        run: PYTHONPATH=. uv run src/main.py
+        run: PYTHONPATH=. uv run python -u src/main.py
         
       - name: Save JSON Artifact
         uses: actions/upload-artifact@v4
@@ -51,3 +59,20 @@ jobs:
             data/processed.json \
             s3://${{ vars.R2_BUCKET_NAME }}/baby/scraped_date=latest/processed.json \
             --endpoint-url https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+
+      # GitHub switches off scheduled workflows after 60 days without commits (this happened in June 2026).
+      # Re-enabling it on every run resets that timer, so the daily scrape keeps going.
+      - name: Keep the daily schedule switched on
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/scrape.yml/enable"
+
+      - name: Fail if a source could not be scraped
+        run: |
+          if [ -s data/errors.txt ]; then
+            echo "::error::Some sources failed (their recalls are missing from today's file):"
+            cat data/errors.txt
+            exit 1
+          fi
+
