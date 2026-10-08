@@ -1,20 +1,23 @@
 import json
 import os
-from datetime import datetime
-from deep_translator import GoogleTranslator
+import sys
 from datetime import datetime
 from src.scrapers.germany import GermanyScraper
 from src.scrapers.fda import FDAScraper
+from src.scrapers.cpsc import CPSCScraper
+from src.translate import Translator, known_translations, load_previous
 
 def main():
     print("Starting recall data collection...")
     scrapers = [
         GermanyScraper(),
-        FDAScraper()
+        FDAScraper(),
+        CPSCScraper(),
     ]
 
     all_recalls = []
-    
+    failed = []
+
     for scraper_cls in scrapers:
         print(f"Running scraper for {scraper_cls.source_name}...")
         try:
@@ -22,41 +25,28 @@ def main():
             all_recalls.extend(recalls)
             print(f"Found {len(recalls)} recalls from {scraper_cls.source_name}")
         except Exception as e:
-            print(f"Error scraping {scraper_cls.source_name}: {e}")
+            print(f"Error scraping {scraper_cls.source_name}: {e!r}")
+            failed.append(f"{scraper_cls.source_name}: {e!r}")
+
+    if not all_recalls:
+        # Never publish an empty list over the last good one.
+        print("No recalls collected from any source; not writing output.")
+        sys.exit(1)
 
     # Process and sort by publish date
     from datetime import timezone
     all_recalls.sort(key=lambda x: x.publish_datetime if x.publish_datetime else datetime.min.replace(tzinfo=timezone.utc), reverse=True)
     
-    # Translate specific fields into desired languages
-    target_langs = ['en', 'de', 'es', 'fr', 'zh-CN']
-    translators = {lang: GoogleTranslator(source='auto', target=lang) for lang in target_langs}
-    
-    print("Translating data...")
-    for i, recall in enumerate(all_recalls):
-        if i % 10 == 0:
-            print(f"Translating record {i}/{len(all_recalls)}...")
-            
-        def translate_text(text):
-            if not text:
-                return None
-            
-            # If it's already a dictionary (from an older run perhaps), we skip for now 
-            # (though the scrapers return it as strings natively so here we just handle strings)
-            if isinstance(text, dict):
-                return text
-                
-            translations = {}
-            for lang in target_langs:
-                try:
-                    translations[lang] = translators[lang].translate(text)
-                except Exception as e:
-                    print(f"Translation error to {lang}: {e}")
-                    translations[lang] = text # fallback
-            return translations
-            
-        recall.reason = translate_text(recall.reason)
-        recall.annotation = translate_text(recall.annotation)    
+    translator = Translator()
+    done = translator.translate_all((t for r in all_recalls for t in (r.reason, r.annotation)), known_translations(load_previous()))
+    for recall in all_recalls:
+        recall.reason = translator.lookup(done, recall.reason)
+        recall.annotation = translator.lookup(done, recall.annotation)
+    print("Translations:", translator.stats, flush=True)
+
+    from collections import Counter
+    print("Recalls per source:", dict(Counter(r.source for r in all_recalls)))
+
     # Ensure output directory exists
     os.makedirs("data", exist_ok=True)
     
@@ -68,6 +58,10 @@ def main():
         json.dump([recall.model_dump(mode="json") for recall in all_recalls], f, indent=2, ensure_ascii=False)
         
     print(f"Successfully exported {len(all_recalls)} records to {output_path}")
+
+    # The workflow uploads what was collected, then fails on this file so a broken source gets noticed.
+    with open("data/errors.txt", "w", encoding="utf-8") as f:
+        f.write("\n".join(failed))
 
 if __name__ == "__main__":
     main()
