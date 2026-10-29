@@ -40,3 +40,44 @@ def test_fda_scraper_parse_and_filter():
     assert recall.source == "FDA"
     assert recall.reason == "Undeclared ethanol"
     assert recall.company == "Pacific Health Sciences"
+
+
+def openfda_row(report_date, desc, reason, number):
+    return {
+        "recall_number": number,
+        "event_id": "98506",
+        "report_date": report_date,
+        "product_description": desc,
+        "reason_for_recall": reason,
+        "recalling_firm": "Pacific Health Sciences",
+    }
+
+
+def test_fda_openfda_parse_and_filter():
+    today = datetime.now(timezone.utc).strftime("%Y%m%d")
+    rows = [
+        openfda_row(today, "Baby Sleep Gripe Water 4 oz bottle", "Undeclared ethanol", "F-0001-2026"),
+        openfda_row(today, "Canned kidney beans", "Undeclared allergen", "F-0002-2026"),
+        openfda_row("not-a-date", "Infant Formula", "Contamination", "F-0003-2026"),
+    ]
+    recalls = FDAScraper().parse_openfda(rows)
+
+    assert len(recalls) == 1
+    recall = recalls[0]
+    assert recall.id == "FDA-F-0001-2026"
+    assert recall.url == "https://www.accessdata.fda.gov/scripts/ires/index.cfm?Event=98506"
+    assert recall.title == "Baby Sleep Gripe Water 4 oz bottle"
+    assert recall.reason == "Undeclared ethanol"
+    assert recall.company == "Pacific Health Sciences"
+    assert recall.source == "FDA"
+
+
+def test_fda_falls_back_to_openfda_when_blocked():
+    scraper = FDAScraper()
+
+    def blocked():
+        raise RuntimeError("302 to abuse-detection-apology.html")
+
+    scraper.fetch_data = blocked
+    scraper.fetch_openfda = lambda: [openfda_row(datetime.now(timezone.utc).strftime("%Y%m%d"), "Infant formula", "Contamination", "F-0004-2026")]
+    assert [r.id for r in scraper.scrape()] == ["FDA-F-0004-2026"]
