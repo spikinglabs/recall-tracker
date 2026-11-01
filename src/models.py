@@ -17,6 +17,7 @@ class RecallInfo(BaseModel):
     title_i18n: Optional[Dict[str, str]] = None  # the title in each site language; `title` stays the original
     category: Optional[str] = None  # food, feeding, toys, sleep, travel, clothing, furniture, health, other
     for_children: Optional[bool] = None
+    rules: Optional[int] = None  # version of the for_children rules that gave the verdict (classify.RULES)
     # When the tracker first and last found this recall at its source (the archive keeps it after that).
     first_seen: Optional[datetime] = None
     last_seen: Optional[datetime] = None
