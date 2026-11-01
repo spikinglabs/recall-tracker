@@ -13,6 +13,13 @@ class RecallInfo(BaseModel):
     reason: Optional[Union[str, Dict[str, str]]] = None
     company: Optional[str] = None
     annotation: Optional[Union[str, Dict[str, str]]] = None
+    # Filled in by the classification step (src/classify.py); None when it hasn't run for this recall.
+    title_i18n: Optional[Dict[str, str]] = None  # the title in each site language; `title` stays the original
+    category: Optional[str] = None  # food, feeding, toys, sleep, travel, clothing, furniture, health, other
+    for_children: Optional[bool] = None
+    # When the tracker first and last found this recall at its source (the archive keeps it after that).
+    first_seen: Optional[datetime] = None
+    last_seen: Optional[datetime] = None
     scraped_datetime: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     @computed_field

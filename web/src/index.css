@@ -66,13 +66,14 @@ h1 {
 
 /* Search Bar */
 .search-container {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
 }
 
 .search-input-wrapper {
-  flex: 1;
+  flex: 1 1 100%;
   position: relative;
 }
 
@@ -120,6 +121,8 @@ h1 {
 }
 
 .country-select {
+  flex: 1 1 10rem;
+  min-width: 0;
   padding: 1rem;
   font-size: 1rem;
   border: 1px solid var(--border-color);
@@ -223,4 +226,18 @@ h1 {
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   border: 1px solid var(--border-color);
+}
+.list-status {
+  font-size: 0.85rem;
+  opacity: 0.75;
+  margin: 0 0 1rem;
+}
+
+.list-warning {
+  color: #b45309;
+}
+
+.recall-original {
+  font-size: 0.85rem;
+  opacity: 0.75;
 }

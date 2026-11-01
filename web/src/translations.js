@@ -8,7 +8,12 @@ export const translations = {
         noRecalls: "No recalls found.",
         company: "Company:",
         viewSource: "View Source",
-        allCountries: "All Countries"
+        allCountries: "All Countries",
+        allCategories: "All products",
+        updated: "List updated {date}.",
+        sourceFailed: "Could not reach {sources} today, so its newest recalls may be missing.",
+        originalTitle: "Original title:",
+        categories: {"food": "Food & formula", "feeding": "Feeding", "toys": "Toys", "sleep": "Sleep", "travel": "Car seats & strollers", "clothing": "Clothing", "furniture": "Furniture", "health": "Health & care", "other": "Other"}
     },
     de: {
         title: "Rückruf-Tracker",
@@ -19,7 +24,12 @@ export const translations = {
         noRecalls: "Keine Rückrufe gefunden.",
         company: "Firma:",
         viewSource: "Quelle ansehen",
-        allCountries: "Alle Länder"
+        allCountries: "Alle Länder",
+        allCategories: "Alle Produkte",
+        updated: "Liste aktualisiert am {date}.",
+        sourceFailed: "{sources} war heute nicht erreichbar, neueste Rückrufe können fehlen.",
+        originalTitle: "Originaltitel:",
+        categories: {"food": "Lebensmittel & Säuglingsnahrung", "feeding": "Füttern", "toys": "Spielzeug", "sleep": "Schlafen", "travel": "Kindersitze & Kinderwagen", "clothing": "Kleidung", "furniture": "Möbel", "health": "Gesundheit & Pflege", "other": "Sonstiges"}
     },
     es: {
         title: "Rastreador de Retiros",
@@ -30,7 +40,12 @@ export const translations = {
         noRecalls: "No se encontraron retiros.",
         company: "Empresa:",
         viewSource: "Ver fuente",
-        allCountries: "Todos los países"
+        allCountries: "Todos los países",
+        allCategories: "Todos los productos",
+        updated: "Lista actualizada el {date}.",
+        sourceFailed: "Hoy no se pudo consultar {sources}; pueden faltar sus retiros más recientes.",
+        originalTitle: "Título original:",
+        categories: {"food": "Alimentos y fórmula", "feeding": "Alimentación", "toys": "Juguetes", "sleep": "Sueño", "travel": "Sillas de auto y cochecitos", "clothing": "Ropa", "furniture": "Muebles", "health": "Salud y cuidado", "other": "Otros"}
     },
     fr: {
         title: "Suivi des Rappels",
@@ -41,7 +56,12 @@ export const translations = {
         noRecalls: "Aucun rappel trouvé.",
         company: "Entreprise :",
         viewSource: "Voir la source",
-        allCountries: "Tous les pays"
+        allCountries: "Tous les pays",
+        allCategories: "Tous les produits",
+        updated: "Liste mise à jour le {date}.",
+        sourceFailed: "{sources} n'a pas répondu aujourd'hui ; ses rappels les plus récents peuvent manquer.",
+        originalTitle: "Titre original :",
+        categories: {"food": "Alimentation et lait infantile", "feeding": "Repas", "toys": "Jouets", "sleep": "Sommeil", "travel": "Sièges auto et poussettes", "clothing": "Vêtements", "furniture": "Meubles", "health": "Santé et soins", "other": "Autres"}
     },
     "zh-CN": {
         title: "召回追踪器",
@@ -52,6 +72,11 @@ export const translations = {
         noRecalls: "未找到召回信息。",
         company: "公司:",
         viewSource: "查看来源",
-        allCountries: "所有国家"
+        allCountries: "所有国家",
+        allCategories: "所有产品",
+        updated: "列表更新于 {date}。",
+        sourceFailed: "今天无法访问 {sources}，可能缺少其最新召回信息。",
+        originalTitle: "原标题：",
+        categories: {"food": "食品和配方奶", "feeding": "喂养用品", "toys": "玩具", "sleep": "睡眠用品", "travel": "安全座椅和婴儿车", "clothing": "服装", "furniture": "家具", "health": "健康与护理", "other": "其他"}
     }
 }

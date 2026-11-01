@@ -5,6 +5,8 @@ import { translations } from './translations'
 import './index.css'
 
 const DATA_URL = 'https://pub-f36c3831e82845e4af2d54940ea6c32d.r2.dev/baby/scraped_date%3Dlatest/processed.json'
+const STATUS_URL = DATA_URL.replace('processed.json', 'status.json')
+const CATEGORIES = ['food', 'feeding', 'toys', 'sleep', 'travel', 'clothing', 'furniture', 'health', 'other']
 
 export function App() {
   const [recalls, setRecalls] = useState([])
@@ -19,6 +21,11 @@ export function App() {
   const [selectedCountry, setSelectedCountry] = useState(() => {
     return localStorage.getItem('selectedCountry') || 'All'
   })
+  const [selectedCategory, setSelectedCategory] = useState(() => {
+    return localStorage.getItem('selectedCategory') || 'All'
+  })
+  // When the list was made and which sources failed today (status.json); the page works without it.
+  const [status, setStatus] = useState(null)
 
   const [searchHistory, setSearchHistory] = useState(() => {
     try {
@@ -32,6 +39,10 @@ export function App() {
   useEffect(() => {
     localStorage.setItem('selectedCountry', selectedCountry)
   }, [selectedCountry])
+
+  useEffect(() => {
+    localStorage.setItem('selectedCategory', selectedCategory)
+  }, [selectedCategory])
 
   useEffect(() => {
     localStorage.setItem('appLang', lang)
@@ -74,9 +85,16 @@ export function App() {
         setError(err.message)
         setLoading(false)
       })
+    fetch(STATUS_URL)
+      .then(response => response.ok ? response.json() : null)
+      .then(setStatus)
+      .catch(() => {})
   }, [])
 
   const uniqueCountries = ['All', ...new Set(recalls.map(r => r.country_sold_in).filter(Boolean))].sort()
+  // Only offer categories that appear in the list (none until the classification step has run).
+  const presentCategories = new Set(recalls.map(r => r.category).filter(Boolean))
+  const categories = ['All', ...CATEGORIES.filter(c => presentCategories.has(c))]
 
   const filteredRecalls = recalls.filter(recall => {
     const query = searchQuery.toLowerCase()
@@ -88,7 +106,7 @@ export function App() {
       return field[lang] || field['en'] || Object.values(field)[0] || ''
     }
 
-    const titleCmp = (recall.title || '').toLowerCase()
+    const titleCmp = [recall.title, getLocal(recall.title_i18n)].join(' ').toLowerCase()
     const compCmp = (recall.company || '').toLowerCase()
     const reasonCmp = getLocal(recall.reason).toLowerCase()
 
@@ -98,11 +116,14 @@ export function App() {
       reasonCmp.includes(query)
     )
     const matchesCountry = selectedCountry === 'All' || recall.country_sold_in === selectedCountry
+    const matchesCategory = selectedCategory === 'All' || categories.length < 2 || recall.category === selectedCategory
 
-    return matchesSearch && matchesCountry
+    return matchesSearch && matchesCountry && matchesCategory
   })
 
   const t = translations[lang] || translations['en']
+  const failedSources = (status?.sources || []).filter(s => !s.ok).map(s => s.name)
+  const updated = status?.updated && new Date(status.updated).toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' })
   return (
     <main>
       <header class="app-header">
@@ -131,8 +152,18 @@ export function App() {
         countries={uniqueCountries}
         selectedCountry={selectedCountry}
         onCountryChange={setSelectedCountry}
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
         t={t}
       />
+
+      {status && (
+        <p class="list-status">
+          {updated && t.updated.replace('{date}', updated)}
+          {failedSources.length > 0 && <span class="list-warning"> {t.sourceFailed.replace('{sources}', failedSources.join(', '))}</span>}
+        </p>
+      )}
 
       {loading && <p>{t.loading}</p>}
       {error && <p>{t.error} {error}</p>}
