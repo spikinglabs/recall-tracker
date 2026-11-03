@@ -9,11 +9,7 @@ from src.classify import Classifier
 from src.scrapers.cpsc import CPSCScraper
 from src.scrapers.fda import FDAScraper
 from src.scrapers.germany import GermanyScraper
-from src.translate import PREVIOUS_URL, Translator, known_translations, load_previous
-
-# Recalls Claude judged to be adult products. Published separately so they can be reviewed, and so tomorrow's run
-# reuses the verdict instead of asking again.
-EXCLUDED_URL = PREVIOUS_URL.replace("processed.json", "excluded.json")
+from src.translate import Translator, known_translations, load_previous
 
 
 def write_json(path, data):
@@ -52,7 +48,8 @@ def main():
         sys.exit(1)
 
     previous = load_previous()
-    previous_excluded = load_previous(EXCLUDED_URL)
+    # Recalls Claude judged to be adult products, published separately for review; reloaded so their verdicts are reused.
+    previous_excluded = load_previous("excluded.json")
     earlier = {item["id"]: item for item in previous + previous_excluded if isinstance(item, dict) and item.get("id")}
 
     all_recalls = merge(found, list(earlier.values()), now)
