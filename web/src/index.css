@@ -1,4 +1,4 @@
-/* Recall Tracker in the Allo Outings style (spikinglabs/little-outings, src/styles/global.css).
+/* Allo Recalls in the Allo Outings style (spikinglabs/little-outings, src/styles/global.css).
    Colours from German public signage (design/tokens.css):
    gold = dates, rot = new recalls and warnings, blau = links, schwarz = text and actions. */
 @import "./design/tokens.css";

@@ -37,7 +37,7 @@ export const typedCode = (q) => {
 }
 
 /** What the poster's search box says: the name Chinese readers search for, the address for everyone else. */
-export const SEARCH_ZH = '召回追踪器 Recall Tracker'
+export const SEARCH_ZH = '小鹿召回 Allo Recalls'
 export const searchFor = (lang) => (lang === 'zh-CN' ? SEARCH_ZH : 'recalls.allo.land')
 
 /** The text for Rednote: no link (Rednote punishes them), the name to search for and the code, and tags. */
