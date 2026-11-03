@@ -1,18 +1,20 @@
 import { useState, useRef, useEffect } from 'preact/hooks'
+import { Icon } from '../icons'
 
-export function SearchBar({ query, onSearch, onSaveHistory, searchHistory, countries, selectedCountry, onCountryChange, categories, selectedCategory, onCategoryChange, t }) {
+// The search box, then the product types as chips, as on Allo Outings. The country is set once in the header.
+export function SearchBar({ query, onSearch, onSaveHistory, searchHistory, categories, categoryCounts, selectedCategory, onCategoryChange, t, lang }) {
     const [isFocused, setIsFocused] = useState(false)
     const containerRef = useRef(null)
 
-    // Close dropdown when clicking outside
+    // Close the recent searches when clicking elsewhere.
     useEffect(() => {
         function handleClickOutside(event) {
             if (containerRef.current && !containerRef.current.contains(event.target)) {
                 setIsFocused(false)
             }
         }
-        document.addEventListener("mousedown", handleClickOutside)
-        return () => document.removeEventListener("mousedown", handleClickOutside)
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
     const handleKeyDown = (e) => {
@@ -28,27 +30,32 @@ export function SearchBar({ query, onSearch, onSaveHistory, searchHistory, count
         setIsFocused(false)
     }
 
-    return (
-        <div class="search-container" ref={containerRef}>
-            <div class="search-input-wrapper">
-                <input
-                    type="text"
-                    class="search-input"
-                    placeholder={t.searchPlaceholder}
-                    value={query}
-                    onInput={(e) => onSearch(e.target.value)}
-                    onFocus={() => setIsFocused(true)}
-                    onKeyDown={handleKeyDown}
-                />
+    const history = (searchHistory || []).filter(h => h.toLowerCase() !== query.trim().toLowerCase())
+    const category = categories.includes(selectedCategory) ? selectedCategory : 'All'
 
-                {isFocused && searchHistory && searchHistory.length > 0 && (
-                    <ul class="search-history-dropdown">
-                        {searchHistory.map((item, index) => (
+    return (
+        <div>
+            <div class="search-wrap" ref={containerRef}>
+                <label class="search">
+                    <Icon name="search" />
+                    <input
+                        type="search"
+                        placeholder={t.searchPlaceholder}
+                        aria-label={t.searchPlaceholder}
+                        value={query}
+                        onInput={(e) => onSearch(e.target.value)}
+                        onFocus={() => setIsFocused(true)}
+                        onKeyDown={handleKeyDown}
+                    />
+                    {query && <button type="button" class="search-clear" aria-label="×" onClick={() => onSearch('')}>×</button>}
+                </label>
+                {isFocused && history.length > 0 && (
+                    <ul class="history">
+                        {history.map((item) => (
                             <li
-                                key={index}
-                                class="search-history-item"
+                                key={item}
                                 onMouseDown={(e) => {
-                                    // Prevent input blur before click registers
+                                    // Keep the input focused until the click lands.
                                     e.preventDefault()
                                     handleHistoryClick(item)
                                 }}
@@ -60,32 +67,15 @@ export function SearchBar({ query, onSearch, onSaveHistory, searchHistory, count
                 )}
             </div>
 
-            {countries && countries.length > 1 && (
-                <select
-                    class="country-select"
-                    value={selectedCountry}
-                    onChange={(e) => onCountryChange(e.target.value)}
-                >
-                    {countries.map(country => (
-                        <option key={country} value={country}>
-                            {country === 'All' ? t.allCountries : country}
-                        </option>
-                    ))}
-                </select>
-            )}
-
-            {categories && categories.length > 1 && (
-                <select
-                    class="country-select"
-                    value={categories.includes(selectedCategory) ? selectedCategory : 'All'}
-                    onChange={(e) => onCategoryChange(e.target.value)}
-                >
+            {categories.length > 1 && (
+                <div class="filters" role="group" aria-label={t.allCategories}>
                     {categories.map(c => (
-                        <option key={c} value={c}>
+                        <button key={c} type="button" class="chip" aria-pressed={category === c ? 'true' : 'false'} onClick={() => onCategoryChange(c)}>
                             {c === 'All' ? t.allCategories : (t.categories[c] || c)}
-                        </option>
+                            {c !== 'All' && <span class="n">{categoryCounts[c] || 0}</span>}
+                        </button>
                     ))}
-                </select>
+                </div>
             )}
         </div>
     )
