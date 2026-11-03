@@ -103,27 +103,28 @@ export async function copy(s) {
 // ---------- the poster ----------
 
 export const POSTER = { w: 1080, h: 1440 }
-const C = { paper: '#fbfaf6', ink: '#17191b', soft: '#4a4f55', line: '#dddbd5', gold: '#ffcc00', rot: '#d1001f', blau: '#1d4f91' }
-const CJK = '"PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Noto Sans SC", "Microsoft YaHei", sans-serif'
-const BODY = `"Atkinson Hyperlegible", ${CJK}`
-const DISPLAY = `"Bricolage Grotesque Variable", "Atkinson Hyperlegible", ${CJK}`
-const SIGN = `"Barlow Semi Condensed", "Atkinson Hyperlegible", ${CJK}`
+export const C = { paper: '#fbfaf6', ink: '#17191b', soft: '#4a4f55', line: '#dddbd5', gold: '#ffcc00', rot: '#d1001f', blau: '#1d4f91' }
+export const CJK = '"PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Noto Sans SC", "Microsoft YaHei", sans-serif'
+export const BODY = `"Atkinson Hyperlegible", ${CJK}`
+export const DISPLAY = `"Bricolage Grotesque Variable", "Atkinson Hyperlegible", ${CJK}`
+export const SIGN = `"Barlow Semi Condensed", "Atkinson Hyperlegible", ${CJK}`
 
 /** Lines of `text` that fit `width` at the context's font; Chinese breaks between any two characters. */
-function wrap(ctx, text, width) {
+export function wrap(ctx, text, width) {
   const words = /[　-鿿]/.test(text) ? [...text] : text.split(/(\s+)/)
   const out = []
   let line = ''
   for (const w of words) {
     const next = line + w
-    if (ctx.measureText(next).width > width && line.trim()) { out.push(line.trim()); line = w.trimStart() } else line = next
+    // Chinese punctuation never starts a line; it stays with the character before it.
+    if (ctx.measureText(next).width > width && line.trim() && !/^[。，、：；！？」』）%]/.test(w)) { out.push(line.trim()); line = w.trimStart() } else line = next
   }
   if (line.trim()) out.push(line.trim())
   return out
 }
 
 /** At most `max` lines; the last one ends in … when the text was longer. */
-function clamp(ctx, lines, max, width) {
+export function clamp(ctx, lines, max, width) {
   if (lines.length <= max) return lines
   const out = lines.slice(0, max)
   let last = out[max - 1]
@@ -132,7 +133,7 @@ function clamp(ctx, lines, max, width) {
   return out
 }
 
-function roundRect(ctx, x, y, w, h, r) {
+export function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath()
   if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h)
 }
