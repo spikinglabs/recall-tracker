@@ -10,7 +10,7 @@ a { color: var(--blau); }
 [hidden] { display: none !important; }
 :focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; border-radius: 6px; }
 h1, h2, h3 { font-family: var(--display); text-wrap: balance; letter-spacing: -0.01em; margin: 0; }
-h1, h2, h3, .meta, .orig { overflow-wrap: anywhere; }
+h1, h2, h3, p, .meta, .orig { overflow-wrap: anywhere; }
 :lang(zh) h1, :lang(zh) h2, :lang(zh) h3 { letter-spacing: 0; }
 
 .flag { height: 5px; background: linear-gradient(to bottom, #000 0 33.4%, #dd0000 33.4% 66.7%, #ffce00 66.7%); }
@@ -63,7 +63,7 @@ h1, h2, h3, .meta, .orig { overflow-wrap: anywhere; }
 .search-scan svg { width: 22px; height: 22px; color: var(--ink); }
 .check-hint { margin-top: 6px; }
 .scan-sheet { display: none; gap: 12px; }
-.scan-sheet[open] { display: grid; }
+.scan-sheet[open] { display: grid; grid-template-columns: minmax(0, 1fr); }
 .scan-sheet video { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; background: #000; }
 .history { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 40; list-style: none; margin: 0; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); box-shadow: 0 6px 20px rgba(0, 0, 0, .15); }
 .history li { padding: 8px 12px; border-radius: 8px; cursor: pointer; }
