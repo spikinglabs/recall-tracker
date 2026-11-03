@@ -116,10 +116,12 @@ function bars(ctx, rows, label, total, lang, X, W, y, bottom) {
     ctx.textAlign = 'start'
     ctx.font = `${i === 0 ? 700 : 400} 38px ${BODY}`
     ctx.fillText(clamp(ctx, [label(k)], 1, W - vw - 30)[0], X, top + 40)
-    ctx.fillStyle = C.line
+    // The site's colours: black bars, the first one gold with a black edge, like the date signs.
+    ctx.fillStyle = '#ecebe6'
     roundRect(ctx, X, top + 58, W, 24, 12); ctx.fill()
-    ctx.fillStyle = i === 0 ? C.rot : C.blau
+    ctx.fillStyle = i === 0 ? C.gold : C.ink
     roundRect(ctx, X, top + 58, Math.max(24, (W * n) / max), 24, 12); ctx.fill()
+    if (i === 0) { ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.stroke() }
   }
 }
 
@@ -134,8 +136,9 @@ function columns(ctx, time, lang, X, W, y, bottom) {
   for (const [i, b] of time.entries()) {
     const x = X + i * (cw + gap)
     const bh = Math.max(6, (h * b.n) / max)
-    ctx.fillStyle = b.partial ? 'rgba(29, 79, 145, .4)' : b.n === top ? C.rot : C.blau
+    ctx.fillStyle = b.partial ? 'rgba(23, 25, 27, .3)' : b.n === top ? C.gold : C.ink
     roundRect(ctx, x, base - bh, cw, bh, Math.min(12, cw / 3)); ctx.fill()
+    if (b.n === top && !b.partial) { ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.stroke() }
     ctx.fillStyle = C.ink
     ctx.textAlign = 'center'
     ctx.font = `700 ${fit(ctx, String(b.n), 700, 34, 18, SIGN, cw + gap)}px ${SIGN}`
