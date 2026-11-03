@@ -23,6 +23,13 @@ With the repository secret `ANTHROPIC_API_KEY` set, each new recall is sent once
 and reason into the site's languages. Results are published with the recall and reused, so each recall costs one
 call. Without the secret, every recall is kept and the reasons are translated with Google's free endpoint, as before.
 
+## Pages for search engines
+
+`npm run build` in `web/` also runs `scripts/prerender.mjs`. It reads the published data and writes a page for
+each language (`/`, `/de/`, `/es/`, `/fr/`, `/zh/`) and for each recall in each language (`/de/r/7KQ3MX/`), with
+the title, description, link-preview tags and schema.org data, plus `sitemap.xml` and `robots.txt`. The site
+is deployed again after every scrape, so the pages follow the data.
+
 ## Run locally
 
     uv sync

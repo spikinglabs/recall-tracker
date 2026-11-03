@@ -3,6 +3,7 @@ import { RecallList } from './components/RecallList'
 import { SearchBar } from './components/SearchBar'
 import { PosterSheet } from './components/PosterSheet'
 import { shortId, typedCode } from './share'
+import { homePath, parsePath, recallPath } from './paths.js'
 import { translations } from './translations'
 import { Icon } from './icons'
 import '@fontsource/atkinson-hyperlegible/400.css'
@@ -54,21 +55,30 @@ export function App() {
   const [recalls, setRecalls] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  // ?q= comes from a search engine's site search box (the pages' WebSite data, scripts/prerender.mjs).
   const [searchQuery, setSearchQuery] = useState(() => {
-    return localStorage.getItem('searchQuery') || ''
+    return new URLSearchParams(location.search).get('q') ?? (localStorage.getItem('searchQuery') || '')
   })
-  // A shared link names one recall (?r=) and the sharer's language (?lang=), used when the reader hasn't chosen one.
+  // The address names the language (/de/ …) and may name one recall (/de/r/7KQ3MX/). Older shared links
+  // used ?r= and ?lang=. At the root the reader's own choice of language applies.
   const params = new URLSearchParams(location.search)
-  const [lang, setLang] = useState(() => {
+  const fromPath = parsePath(location.pathname)
+  const [lang, setLangState] = useState(() => {
+    if (fromPath.lang) return fromPath.lang
     const shared = params.get('lang')
     return localStorage.getItem('appLang') || (shared && translations[shared] ? shared : 'en')
   })
-  const [onlyId, setOnlyId] = useState(() => params.get('r'))
+  const [onlyId, setOnlyId] = useState(() => fromPath.code || params.get('r'))
+  // Choosing a language moves to that language's address, so the address always matches the page.
+  const setLang = (l) => {
+    setLangState(l)
+    history.replaceState(null, '', onlyId ? recallPath(l, onlyId.toUpperCase()) : homePath(l))
+  }
   const [poster, setPoster] = useState(null)
   const showAll = () => {
     setOnlyId(null)
     if (typedCode(searchQuery)) setSearchQuery('')
-    history.replaceState(null, '', location.pathname)
+    history.replaceState(null, '', homePath(lang))
   }
   const [selectedCountry, setSelectedCountry] = useState(() => {
     return localStorage.getItem('selectedCountry') || 'All'

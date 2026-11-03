@@ -4,6 +4,11 @@ on:
   push:
     branches: ["main"]
   workflow_dispatch:
+  # Each page per recall is built from the published data, so build again after the daily scrape.
+  # (The scrape's run fails when a source couldn't be reached, but it still published the rest.)
+  workflow_run:
+    workflows: ["Scrape Recalls"]
+    types: [completed]
 
 permissions:
   contents: read
