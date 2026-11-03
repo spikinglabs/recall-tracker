@@ -12,6 +12,7 @@ from src.scrapers.fda import FDAScraper
 from src.scrapers.germany import GermanyScraper
 from src.scrapers.safety_gate import SafetyGateScraper
 from src.scrapers.uk_opss import UKScraper
+from src.scrapers.produktwarnung import ProduktwarnungScraper
 from src.translate import Translator, known_translations, load_previous
 
 
@@ -27,6 +28,7 @@ def main():
         GermanyScraper(),
         SafetyGateScraper(),
         UKScraper(),
+        ProduktwarnungScraper(),
         FDAScraper(),
         CPSCScraper(),
     ]
@@ -61,6 +63,7 @@ def main():
 
     all_recalls = merge(found, list(earlier.values()), now)
 
+    classifier = None
     if Classifier.available():
         classifier = Classifier()
         classifier.run(all_recalls, earlier)
@@ -79,7 +82,7 @@ def main():
 
     # The same product from several sources (or several shops) becomes one recall, after Claude has given each
     # report an English title to compare.
-    kept = fold([r for r in all_recalls if r.for_children is not False])
+    kept = fold([r for r in all_recalls if r.for_children is not False], confirm=classifier.same if classifier else None)
     excluded = [r for r in all_recalls if r.for_children is False]
     folded = sum(len(r.also or []) for r in kept)
     print(f"Duplicates folded into other recalls: {folded}")

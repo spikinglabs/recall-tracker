@@ -1,5 +1,5 @@
 # recall-tracker
-Collects recalls of baby and children's products every day (US CPSC, US FDA, Lebensmittelwarnung.de, EU Safety Gate, UK OPSS) into one public
+Collects recalls of baby and children's products every day (US CPSC, US FDA, Lebensmittelwarnung.de, EU Safety Gate, UK OPSS, and retailer recalls via Produktwarnung.eu, marked as not official) into one public
 JSON file on Cloudflare R2, and shows them at https://recalls.allo.land/ (formerly tracker.babybaras.com, which
 redirects there). Allo Auri reads the same file.
 
@@ -43,3 +43,9 @@ and the German alert in Safety Gate), and the UK writes one report per marketpla
 `src/duplicates.py` folds these into one recall: it compares the English titles (and company names), keeps the
 report from the most specific source, and puts the others in its `also` list. The site links them as
 "Also reported by", and a code from a folded report still opens the recall.
+
+Retailer recalls come from Produktwarnung.eu, a private news site, and are the only source that isn't an
+authority. They carry `official: false`, and the site labels them "Retailer recall" / "Retailer notice
+(unofficial)". Because their titles are worded freely, a retailer recall that the title rules don't match is
+compared by Claude with close official recalls (same country, within 45 days, a word in common); the answer is
+kept in `checked_with`, so each pair is asked once. An official report always heads its group.

@@ -74,7 +74,7 @@ function card(r, t, lang, link) {
     (title !== r.title ? `<p class="orig">${esc(r.title)}</p>` : '') +
     `<div class="meta">${esc(who)} · <time datetime="${esc(r.publish_date)}">${esc(r.publish_date)}</time></div>` +
     (reason ? `<p class="reason">${esc(reason)}</p>` : '') +
-    `<div class="trust"><a href="${esc(r.url)}" rel="nofollow noopener">${esc(t.officialNotice)}</a> · ${esc(r.source)}</div></div></article>`
+    `<div class="trust"><a href="${esc(r.url)}" rel="nofollow noopener">${esc(r.official === false ? t.unofficialNotice : t.officialNotice)}</a> · ${esc(r.source)}</div></div></article>`
 }
 
 const template = await readFile(join(DIST, 'index.html'), 'utf8')

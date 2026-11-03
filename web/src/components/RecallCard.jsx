@@ -69,6 +69,8 @@ export function RecallCard({ recall, t, lang, onPoster, only }) {
         : places.length && places.length < 16 ? places.join(', ') : ''
     // Other reports of the same product: one link per source (the UK writes one report per shop).
     const also = [...new Map((recall.also || []).filter(a => a.source !== recall.source).map(a => [a.source, a])).values()]
+    // Retailer recalls from a news site, not from an authority: said on the card in a pill and the notice line.
+    const unofficial = recall.official === false
     const dateText = isNaN(published) ? recall.publish_date : published.toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' })
 
     return (
@@ -82,10 +84,11 @@ export function RecallCard({ recall, t, lang, onPoster, only }) {
                 {note && <p class="note">{note}</p>}
                 <div class="pills">
                     {isNew && <span class="pill new">{t.newPill}</span>}
+                    {unofficial && <span class="pill retailer">{t.retailerPill}</span>}
                     {recall.category && t.categories[recall.category] && <span class="pill">{t.categories[recall.category]}</span>}
                     {where && <span class="pill where"><span aria-hidden="true">📍</span><span>{where}</span></span>}
                 </div>
-                <div class="trust"><b>{t.officialNotice} ↗</b> · {recall.source} · <time datetime={recall.publish_date}>{dateText}</time></div>
+                <div class="trust"><b class={unofficial ? 'unofficial' : ''}>{unofficial ? t.unofficialNotice : t.officialNotice} ↗</b> · {recall.source} · <time datetime={recall.publish_date}>{dateText}</time></div>
                 {also.length > 0 && (
                     <div class="trust also">{t.alsoReported}{' '}
                         {also.map((a, i) => <span key={a.url}>{i > 0 && ' · '}<a href={a.url} target="_blank" rel="noopener noreferrer">{a.source} ↗</a></span>)}

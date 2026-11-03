@@ -59,7 +59,9 @@ export function rednoteText(recall, t) {
   if (recall.country_sold_in === 'EU') tags.splice(4, 0, '欧洲带娃')
   return [
     `⚠️ 召回：${title}`, who, reason, '',
-    `信息来自官方通知（${recall.source}），家里有的话请停止使用，按通知处理。`,
+    recall.official === false
+      ? `信息来自商家召回公告（${recall.source} 报道，非官方通知），家里有的话请停止使用，按商家说明处理。`
+      : `信息来自官方通知（${recall.source}），家里有的话请停止使用，按通知处理。`,
     `浏览器搜索「${SEARCH_ZH}」，在网站搜索框输入编号 ${shortId(recall.id)} 就能看到这条召回，还有更多德国、欧盟和美国的婴幼儿产品召回。`,
     '',
     tags.map(x => `#${x}`).join(' '),
@@ -76,7 +78,8 @@ export function recallText(recall, t, lang) {
   const title = getLocal(recall.title_i18n, lang) || recall.title
   const reason = getLocal(recall.reason, lang)
   const who = [companyName(recall.company), recall.country_sold_in && regionName(recall.country_sold_in, lang)].filter(Boolean).join(' · ')
-  return [`⚠️ ${t.recallTag}: ${title}`, who, reason, t.shareVia.replace('{source}', recall.source)].filter(Boolean).join('\n')
+  const via = recall.official === false ? t.shareViaRetailer : t.shareVia
+  return [`⚠️ ${t.recallTag}: ${title}`, who, reason, via.replace('{source}', recall.source)].filter(Boolean).join('\n')
 }
 
 /** Inside WeChat (its browser says MicroMessenger), which has no share sheet. */
@@ -264,7 +267,7 @@ export async function posterPng(recall, t, lang) {
   if ('letterSpacing' in ctx) ctx.letterSpacing = '0px'
   ctx.font = `400 30px ${BODY}`
   ctx.fillStyle = C.soft
-  ctx.fillText(clamp(ctx, wrap(ctx, t.posterCode.replace('{source}', recall.source), W), 1, W)[0], X, boxY + boxH + 52)
+  ctx.fillText(clamp(ctx, wrap(ctx, (recall.official === false ? t.posterCodeRetailer : t.posterCode).replace('{source}', recall.source), W), 1, W)[0], X, boxY + boxH + 52)
 
   return new Promise((ok, fail) => cv.toBlob(b => (b ? ok(b) : fail(new Error('no picture'))), 'image/png'))
 }
