@@ -76,14 +76,19 @@ jobs:
       # Skipped until the R2_ALLO_* settings exist. The step above keeps the old r2.dev bucket current for readers
       # that haven't moved yet.
       - name: Upload to the allo.land R2 bucket
-        if: vars.R2_ALLO_ACCOUNT_ID != ''
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ALLO_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_ALLO_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: auto
           BUCKET: ${{ vars.R2_ALLO_BUCKET_NAME || 'recall-tracker-data' }}
-          ENDPOINT: https://${{ vars.R2_ALLO_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          # The account ID may be saved as a variable or as a secret.
+          ACCOUNT_ID: ${{ vars.R2_ALLO_ACCOUNT_ID || secrets.R2_ALLO_ACCOUNT_ID }}
         run: |
+          if [ -z "$ACCOUNT_ID" ] || [ -z "$AWS_ACCESS_KEY_ID" ]; then
+            echo "::warning::R2_ALLO_ACCOUNT_ID or R2_ALLO_ACCESS_KEY_ID is not set; skipping the allo.land bucket."
+            exit 0
+          fi
+          ENDPOINT="https://$ACCOUNT_ID.r2.cloudflarestorage.com"
           SCRAPED_DATE=$(date -u +"%Y-%m-%d")
           aws s3 cp data/processed.json "s3://$BUCKET/baby/scraped_date=$SCRAPED_DATE/processed.json" --endpoint-url "$ENDPOINT"
           for f in processed.json excluded.json status.json; do
