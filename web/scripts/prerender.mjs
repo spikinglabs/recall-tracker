@@ -13,6 +13,8 @@ import { LANG_DIR, SITE, homePath, recallPath, statsPath } from '../src/paths.js
 import { computeStats, ranges, REGIONS } from '../src/stats.js'
 import { alloSites } from '../src/allo.js'
 
+const PAGE = 24
+
 const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist')
 const DATA = [
   'https://recalls-api.allo.land/baby/scraped_date%3Dlatest/',
@@ -108,7 +110,8 @@ for (const lang of LANGS) {
   const description = `${t.subtitle} ${recalls.length ? t.count.replace('{n}', recalls.length) + '.' : ''}`.trim()
   const body = `<main class="app"><section class="ask"><h1>${esc(plain(t.hero))}</h1><p class="sub">${esc(t.subtitle)}</p></section>` +
     `<section class="section"><h2>${esc(t.count.replace('{n}', recalls.length))}</h2><div class="grid">` +
-    recalls.map((r) => card(r, t, lang, true)).join('') + `</div></section></main>`
+    // The newest ones only; each recall has its own page, listed in the sitemap.
+    recalls.slice(0, PAGE).map((r) => card(r, t, lang, true)).join('') + `</div></section></main>`
   await write(path, page(template, {
     lang, path, title, description, body,
     alternates: LANGS.map((l) => [l, homePath(l)]),

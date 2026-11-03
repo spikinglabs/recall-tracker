@@ -1,5 +1,6 @@
 export const translations = {
     en: {
+        showMore: "Show more ({n} left)",
         moreAllo: "More from Allo",
         allo: {"outings": "Family outings and kid-friendly places in Germany", "auri": "A private baby log for parents", "land": "Settle into life in Germany"},
         statsWeekOf: "week of {date}",
@@ -97,6 +98,7 @@ export const translations = {
         categories: {"food": "Food & formula", "feeding": "Feeding", "toys": "Toys", "sleep": "Sleep", "travel": "Car seats & strollers", "clothing": "Clothing", "furniture": "Furniture", "health": "Health & care", "other": "Other"}
     },
     de: {
+        showMore: "Mehr anzeigen (noch {n})",
         moreAllo: "Mehr von Allo",
         allo: {"outings": "Familienausflüge und kinderfreundliche Orte in Deutschland", "auri": "Ein privates Baby-Tagebuch für Eltern", "land": "Ankommen im Leben in Deutschland"},
         statsWeekOf: "Woche ab {date}",
@@ -194,6 +196,7 @@ export const translations = {
         categories: {"food": "Lebensmittel & Säuglingsnahrung", "feeding": "Füttern", "toys": "Spielzeug", "sleep": "Schlafen", "travel": "Kindersitze & Kinderwagen", "clothing": "Kleidung", "furniture": "Möbel", "health": "Gesundheit & Pflege", "other": "Sonstiges"}
     },
     es: {
+        showMore: "Ver más (quedan {n})",
         moreAllo: "Más de Allo",
         allo: {"outings": "Salidas en familia y lugares para niños en Alemania", "auri": "Un diario privado del bebé para padres", "land": "Instálate en la vida en Alemania"},
         statsWeekOf: "semana del {date}",
@@ -291,6 +294,7 @@ export const translations = {
         categories: {"food": "Alimentos y fórmula", "feeding": "Alimentación", "toys": "Juguetes", "sleep": "Sueño", "travel": "Sillas de auto y cochecitos", "clothing": "Ropa", "furniture": "Muebles", "health": "Salud y cuidado", "other": "Otros"}
     },
     fr: {
+        showMore: "Voir plus (encore {n})",
         moreAllo: "Plus d'Allo",
         allo: {"outings": "Sorties en famille et lieux pour enfants en Allemagne", "auri": "Un journal privé de bébé pour les parents", "land": "S'installer en Allemagne"},
         statsWeekOf: "semaine du {date}",
@@ -388,6 +392,7 @@ export const translations = {
         categories: {"food": "Alimentation et lait infantile", "feeding": "Repas", "toys": "Jouets", "sleep": "Sommeil", "travel": "Sièges auto et poussettes", "clothing": "Vêtements", "furniture": "Meubles", "health": "Santé et soins", "other": "Autres"}
     },
     "zh-CN": {
+        showMore: "显示更多（还有 {n} 条）",
         moreAllo: "更多 Allo 工具",
         allo: {"outings": "德国亲子活动和遛娃好去处", "auri": "给父母的私密宝宝日志", "land": "融入德国生活"},
         statsWeekOf: "{date} 当周",

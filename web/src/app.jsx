@@ -280,7 +280,7 @@ export function App() {
           </div>
           {error && <p class="empty">{t.error} {error}</p>}
           {!loading && !error && (
-            <RecallList recalls={shown} t={t} lang={lang} onPoster={setPoster} only={!!sharedRecall} />
+            <RecallList key={`${searchQuery}|${selectedCountry}|${activeCategory}|${sharedRecall?.id || ''}`} recalls={shown} t={t} lang={lang} onPoster={setPoster} only={!!sharedRecall} />
           )}
         </section>
         {!loading && !sharedRecall && (
