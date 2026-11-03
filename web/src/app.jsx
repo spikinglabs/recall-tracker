@@ -10,6 +10,7 @@ import { Stats } from './components/Stats'
 import { homePath, parsePath, recallPath, statsPath } from './paths.js'
 import { translations } from './translations'
 import { Icon } from './icons'
+import { alloSites } from './allo.js'
 import '@fontsource/atkinson-hyperlegible/400.css'
 import '@fontsource/atkinson-hyperlegible/700.css'
 import '@fontsource/barlow-semi-condensed/700.css'
@@ -286,6 +287,14 @@ export function App() {
           <History query={query} text={searchQuery} skip={knownIds} foundRecent={filteredRecalls.length > 0} t={t} lang={lang} />
         )}
         </>)}
+        <footer class="family">
+          <h2>{t.moreAllo}</h2>
+          <ul>
+            {alloSites(lang).map(site => (
+              <li key={site.id}><a href={site.url}><b>{site.name}</b><span>{t.allo[site.id]}</span></a></li>
+            ))}
+          </ul>
+        </footer>
       </div>
       <PosterSheet recall={poster} t={t} lang={lang} onClose={() => setPoster(null)} />
       <Scanner open={scanning} t={t} onClose={() => setScanning(false)} onCode={(code) => { setScanning(false); setSearchQuery(code); handleSaveToHistory(code) }} />
