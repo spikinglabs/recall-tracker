@@ -189,3 +189,4 @@ h1, h2, h3, .meta, .orig { overflow-wrap: anywhere; }
 .col.top .col-n { color: var(--ink); font-weight: 700; }
 .col.partial .col-bar { opacity: .3; }
 .col-label { position: absolute; top: calc(100% + 6px); left: -2px; right: -2px; text-align: center; font-size: .7rem; color: var(--ink-soft); white-space: nowrap; overflow: hidden; }
+.stats-link[aria-current="page"] { background: var(--gold); border-color: var(--gold-ink); color: var(--gold-ink); }

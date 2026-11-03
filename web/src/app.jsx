@@ -215,6 +215,9 @@ export function App() {
             <span>{t.title}</span>
           </a>
           <div class="top-right">
+            <a class="theme-flip stats-link" href={statsPath(lang)} aria-label={t.statsLink} title={t.statsLink} aria-current={onStats ? 'page' : undefined}>
+              <Icon name="chart" />
+            </a>
             <button type="button" class="theme-flip" aria-label={t.themeFlip} title={t.themeFlip} onClick={flipTheme}>
               <span class="theme-moon"><Icon name="moon" /></span>
               <span class="theme-sun"><Icon name="sun" /></span>
