@@ -190,3 +190,11 @@ h1, h2, h3, p, .meta, .orig { overflow-wrap: anywhere; }
 .col.partial .col-bar { opacity: .3; }
 .col-label { position: absolute; top: calc(100% + 6px); left: -2px; right: -2px; text-align: center; font-size: .7rem; color: var(--ink-soft); white-space: nowrap; overflow: hidden; }
 .stats-link[aria-current="page"] { background: var(--gold); border-color: var(--gold-ink); color: var(--gold-ink); }
+
+/* The other Allo sites */
+.family { margin: 40px 0 24px; padding-top: 18px; border-top: 1px solid var(--line); }
+.family h2 { font-size: .95rem; margin: 0 0 10px; color: var(--ink-soft); font-weight: 700; }
+.family ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+.family a { display: grid; gap: 2px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); color: var(--ink); text-decoration: none; }
+.family a:hover { border-color: var(--ink); }
+.family a span { color: var(--ink-soft); font-size: .88rem; }

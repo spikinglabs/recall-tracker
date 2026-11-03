@@ -11,6 +11,7 @@ import { translations } from '../src/translations.js'
 import { companyName, getLocal, regionName, shortId } from '../src/share.js'
 import { LANG_DIR, SITE, homePath, recallPath, statsPath } from '../src/paths.js'
 import { computeStats, ranges, REGIONS } from '../src/stats.js'
+import { alloSites } from '../src/allo.js'
 
 const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist')
 const DATA = [
@@ -36,6 +37,10 @@ const cut = (s, n) => (s.length > n ? `${s.slice(0, n - 1).replace(/\s+\S*$/, ''
 const plain = (s) => String(s).replace(/\[|\]/g, '')
 // JSON inside <script>: "</" must not end the script early.
 const ld = (o) => JSON.stringify(o).replace(/</g, '\\u003c')
+
+// The other Allo sites, on every page.
+const family = (lang) => `<footer class="family"><h2>${esc(translations[lang].moreAllo)}</h2><ul>` +
+  alloSites(lang).map(x => `<li><a href="${x.url}"><b>${esc(x.name)}</b> <span>${esc(translations[lang].allo[x.id])}</span></a></li>`).join('') + '</ul></footer>'
 
 function page(template, { lang, path, title, description, alternates, body, jsonld, type = 'website', published }) {
   const url = SITE + path
@@ -63,7 +68,7 @@ function page(template, { lang, path, title, description, alternates, body, json
     .replace(/<title>.*?<\/title>/s, '')
     .replace(/<meta name="description"[^>]*>/, '')
     .replace('</head>', `    ${head}\n  </head>`)
-    .replace('<div id="app"></div>', `<div id="app">${body}</div>`)
+    .replace('<div id="app"></div>', `<div id="app">${body}${family(lang)}</div>`)
 }
 
 function card(r, t, lang, link) {
