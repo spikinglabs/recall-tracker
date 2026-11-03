@@ -2,7 +2,7 @@ from pathlib import Path
 
 from src.scrapers.safety_gate import SafetyGateScraper
 
-WEEK = (Path(__file__).parent / "data" / "safety_gate_week.xml").read_text(encoding="utf-8")
+WEEK = (Path(__file__).parent / "safety_gate_week.xml").read_text(encoding="utf-8")
 
 
 def test_safety_gate_keeps_child_products_only():
