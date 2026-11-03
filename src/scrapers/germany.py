@@ -52,7 +52,7 @@ class GermanyScraper(BaseScraper):
                 elif "Hersteller / Inverkehrbringer" in label:
                     reason_split = parent_text.split("Hersteller / Inverkehrbringer:", 1)
                     if len(reason_split) > 1:
-                        company_text = reason_split[1].split("Betroffene Bundesländer", 1)[0]
+                        company_text = reason_split[1].split("Betroffene Bundesländer", 1)[0].split("Produktbezeichnung", 1)[0]
                         company = company_text.strip()
                 elif "Betroffene Bundesländer" in label:
                     loc_split = parent_text.split("Betroffene Bundesländer nach derzeitigem Stand:", 1)

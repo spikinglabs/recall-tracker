@@ -15,7 +15,14 @@ export const regionName = (code, lang) => {
 
 /** The company without the address and product lines that some German notices put in the same field
  *  ("Nestlé Deutschland AG  Baseler Straße 46 …"): the part before the first double space or line break. */
-export const companyName = (company) => (company || '').split(/\s{2,}|\n/)[0].trim()
+// German notices run the address and the product line on after the name ("…UnnaProduktbezeichnung/ -beschreibung: …"),
+// and some start with "Importeur:" or "Inverkehrbringer:". Keep the first name only, without a trailing comma.
+export const companyName = (company) => (company || '')
+  .split(/Produktbezeichnung/)[0]
+  .replace(/^\s*(Importeur|Inverkehrbringer|Hersteller)[^:\n]*:\s*/i, '')
+  .split(/\s{2,}|\n/)[0]
+  .replace(/[\s,;]+$/, '')
+  .trim()
 
 /** Letters and digits that can't be mistaken for each other (no 0/O, no 1/I/L), as in Allo Outings' codes. */
 const ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ'

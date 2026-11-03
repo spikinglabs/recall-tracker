@@ -99,7 +99,7 @@ h1, h2, h3, .meta, .orig { overflow-wrap: anywhere; }
 .pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
 .pill { font-size: .76rem; padding: 2px 8px; border-radius: 999px; background: var(--tint); color: var(--ink); white-space: nowrap; }
 .pill.new { background: var(--rot); color: var(--rot-ink); font-weight: 700; }
-.pill.where { background: transparent; border: 1px dashed var(--ink-soft); color: var(--ink-soft); white-space: normal; }
+.pill.where { display: flex; gap: 4px; align-items: flex-start; border-radius: 10px; padding: 3px 8px; line-height: 1.4; background: transparent; border: 1px dashed var(--ink-soft); color: var(--ink-soft); white-space: normal; }
 .trust { font-size: .78rem; color: var(--ink-soft); margin-top: 6px; }
 .trust b { color: var(--blau); font-weight: 700; }
 
