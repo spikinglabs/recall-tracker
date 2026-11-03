@@ -3,6 +3,9 @@ import { RecallList } from './components/RecallList'
 import { SearchBar } from './components/SearchBar'
 import { PosterSheet } from './components/PosterSheet'
 import { shortId, typedCode } from './share'
+import { parseQuery, search } from './match.js'
+import { History } from './components/History'
+import { Scanner } from './components/Scanner'
 import { homePath, parsePath, recallPath } from './paths.js'
 import { translations } from './translations'
 import { Icon } from './icons'
@@ -57,7 +60,10 @@ export function App() {
   const [error, setError] = useState(null)
   // ?q= comes from a search engine's site search box (the pages' WebSite data, scripts/prerender.mjs).
   const [searchQuery, setSearchQuery] = useState(() => {
-    return new URLSearchParams(location.search).get('q') ?? (localStorage.getItem('searchQuery') || '')
+    // A listing shared from another app to the installed site (manifest share_target) comes as title/text/url.
+    const p = new URLSearchParams(location.search)
+    const shared = p.get('url') || p.get('text') || p.get('title')
+    return p.get('q') ?? shared ?? (localStorage.getItem('searchQuery') || '')
   })
   // The address names the language (/de/ …) and may name one recall (/de/r/7KQ3MX/). Older shared links
   // used ?r= and ?lang=. At the root the reader's own choice of language applies.
@@ -75,6 +81,7 @@ export function App() {
     history.replaceState(null, '', onlyId ? recallPath(l, onlyId.toUpperCase()) : homePath(l))
   }
   const [poster, setPoster] = useState(null)
+  const [scanning, setScanning] = useState(false)
   const showAll = () => {
     setOnlyId(null)
     if (typedCode(searchQuery)) setSearchQuery('')
@@ -164,31 +171,15 @@ export function App() {
   const presentCategories = new Set(recalls.map(r => r.category).filter(Boolean))
   const categories = ['All', ...CATEGORIES.filter(c => presentCategories.has(c))]
 
-  const matching = recalls.filter(recall => {
-    const query = searchQuery.toLowerCase()
-
-    // Safely get the localized reason or annotation if it's a dict, or fallback to original string
-    const getLocal = (field) => {
-      if (!field) return ''
-      if (typeof field === 'string') return field
-      return field[lang] || field['en'] || Object.values(field)[0] || ''
-    }
-
-    const titleCmp = [recall.title, getLocal(recall.title_i18n)].join(' ').toLowerCase()
-    const compCmp = (recall.company || '').toLowerCase()
-    const reasonCmp = getLocal(recall.reason).toLowerCase()
-
-    const matchesSearch = (
-      titleCmp.includes(query) ||
-      compCmp.includes(query) ||
-      reasonCmp.includes(query)
-    )
+  // Brand, model, barcode, a pasted listing title or link (src/match.js); the best matches first.
+  const query = parseQuery(searchQuery)
+  const inCountry = (recall) => {
     // EU Safety Gate alerts concern the whole single market, so they show with Germany too, and German ones with the EU.
     const cc = recall.country_sold_in
-    const matchesCountry = selectedCountry === 'All' || cc === selectedCountry ||
+    return selectedCountry === 'All' || cc === selectedCountry ||
       (selectedCountry !== 'US' && cc !== 'US' && (cc === 'EU' || selectedCountry === 'EU'))
-    return matchesSearch && matchesCountry
-  })
+  }
+  const matching = (searchQuery.trim() ? search(recalls, query) : recalls).filter(inCountry)
   const categoryCounts = {}
   for (const r of matching) categoryCounts[r.category] = (categoryCounts[r.category] || 0) + 1
   const activeCategory = categories.includes(selectedCategory) ? selectedCategory : 'All'
@@ -206,6 +197,8 @@ export function App() {
     if (sharedId) document.querySelector('.section')?.scrollIntoView({ block: 'start' })
   }, [sharedId])
 
+  // Recalls already in the list above (with the reports folded into them) aren't repeated among the older ones.
+  const knownIds = new Set(recalls.flatMap(r => [r.id, ...(r.also || []).map(a => a.id)]))
   const t = translations[lang] || translations['en']
   const failedSources = (status?.sources || []).filter(s => !s.ok).map(s => s.name)
   const updated = status?.updated && new Date(status.updated).toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' })
@@ -255,6 +248,7 @@ export function App() {
           <Hero text={t.hero} />
           <p class="sub">{t.subtitle}</p>
           <SearchBar
+            onScan={() => setScanning(true)}
             query={searchQuery}
             onSearch={handleSearch}
             onSaveHistory={handleSaveToHistory}
@@ -272,7 +266,7 @@ export function App() {
           {failedSources.length > 0 && <p class="alerts">{t.sourceFailed.replace('{sources}', failedSources.join(', '))}</p>}
           {onlyId && !loading && !sharedRecall && <p class="alerts">{t.sharedGone}</p>}
           <div class="section-head">
-            <h2>{loading ? t.loading : sharedRecall ? t.sharedTitle : t.count.replace('{n}', filteredRecalls.length.toLocaleString(lang))}</h2>
+            <h2>{loading ? t.loading : sharedRecall ? t.sharedTitle : (filteredRecalls.length === 1 && t.countOne ? t.countOne : t.count.replace('{n}', filteredRecalls.length.toLocaleString(lang)))}</h2>
             {sharedRecall && <button type="button" class="link-btn" onClick={showAll}>{t.showAll.replace('{n}', recalls.length.toLocaleString(lang))}</button>}
             {!sharedRecall && updated && <p>{t.updated.replace('{date}', updated)}</p>}
           </div>
@@ -281,8 +275,12 @@ export function App() {
             <RecallList recalls={shown} t={t} lang={lang} onPoster={setPoster} only={!!sharedRecall} />
           )}
         </section>
+        {!loading && !sharedRecall && (
+          <History query={query} text={searchQuery} skip={knownIds} foundRecent={filteredRecalls.length > 0} t={t} lang={lang} />
+        )}
       </div>
       <PosterSheet recall={poster} t={t} lang={lang} onClose={() => setPoster(null)} />
+      <Scanner open={scanning} t={t} onClose={() => setScanning(false)} onCode={(code) => { setScanning(false); setSearchQuery(code); handleSaveToHistory(code) }} />
     </>
   )
 }

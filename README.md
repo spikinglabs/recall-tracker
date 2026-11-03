@@ -43,3 +43,15 @@ and the German alert in Safety Gate), and the UK writes one report per marketpla
 `src/duplicates.py` folds these into one recall: it compares the English titles (and company names), keeps the
 report from the most specific source, and puts the others in its `also` list. The site links them as
 "Also reported by", and a code from a folded report still opens the recall.
+
+## Checking a product (second-hand)
+
+Each recall keeps the barcodes and model numbers its source gives (`codes`, from `src/codes.py`; Safety Gate and
+CPSC give them). The search takes a brand, a model, a barcode, a listing's title with extra words, or a Vinted or
+Kleinanzeigen link (the words are read from its address); a camera button scans a barcode. On Android the installed
+site appears in the share menu (`web/public/manifest.webmanifest`), so a listing can be shared straight to it.
+
+Below the main list, the search also looks through `history.json`: ten years of recalls from the Safety Gate,
+the UK and CPSC, plus everything in the main list, built by `src/history.py` after each scrape. It holds titles as
+published (not translated), brand, codes, date, source and link, and is stored gzipped in the allo.land bucket.
+The first runs read old Safety Gate reports 12 minutes at a time until all are in.

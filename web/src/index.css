@@ -59,6 +59,12 @@ h1, h2, h3, .meta, .orig { overflow-wrap: anywhere; }
 .search input { border: 0; background: transparent; padding: 11px 0; flex: 1; min-width: 0; outline: none; }
 .search:focus-within { box-shadow: 0 0 0 3px var(--gold); }
 .search-clear { flex: none; border: 0; background: none; color: var(--ink-soft); font-size: 1.3rem; line-height: 1; padding: 2px 4px; cursor: pointer; border-radius: 8px; }
+.search-scan { flex: none; display: grid; place-items: center; width: 36px; height: 36px; margin-right: -6px; border: 0; border-left: 1px solid var(--line); background: none; color: var(--ink); cursor: pointer; }
+.search-scan svg { width: 22px; height: 22px; color: var(--ink); }
+.check-hint { margin-top: 6px; }
+.scan-sheet { display: none; gap: 12px; }
+.scan-sheet[open] { display: grid; }
+.scan-sheet video { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; background: #000; }
 .history { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 40; list-style: none; margin: 0; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); box-shadow: 0 6px 20px rgba(0, 0, 0, .15); }
 .history li { padding: 8px 12px; border-radius: 8px; cursor: pointer; }
 .history li:hover { background: var(--tint); }
@@ -135,3 +141,15 @@ h1, h2, h3, .meta, .orig { overflow-wrap: anywhere; }
 .spinner { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--ink); animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+
+/* product codes and the ten-year history */
+.codes { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; margin-top: 4px; }
+.codes span { font-weight: 700; }
+.history-list .old { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.history-list .old li { display: flex; gap: 12px; align-items: flex-start; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.history-list .old a { font-weight: 700; color: var(--ink); text-decoration: none; overflow-wrap: anywhere; }
+.history-list .old a:hover { text-decoration: underline; }
+.old-date { flex: none; font-family: var(--sign); font-weight: 700; background: var(--tint); border-radius: 8px; padding: 2px 8px; font-variant-numeric: tabular-nums; }
+.verdict { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--ink-soft); border-radius: 12px; padding: 10px 14px; }
+.verdict p { margin: 0; }
+.verdict p + p { margin-top: 4px; }

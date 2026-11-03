@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'preact/hooks'
 import { Icon } from '../icons'
 
 // The search box, then the product types as chips, as on Allo Outings. The country is set once in the header.
-export function SearchBar({ query, onSearch, onSaveHistory, searchHistory, categories, categoryCounts, selectedCategory, onCategoryChange, t, lang }) {
+export function SearchBar({ onScan, query, onSearch, onSaveHistory, searchHistory, categories, categoryCounts, selectedCategory, onCategoryChange, t, lang }) {
     const [isFocused, setIsFocused] = useState(false)
     const containerRef = useRef(null)
 
@@ -48,7 +48,9 @@ export function SearchBar({ query, onSearch, onSaveHistory, searchHistory, categ
                         onKeyDown={handleKeyDown}
                     />
                     {query && <button type="button" class="search-clear" aria-label="×" onClick={() => onSearch('')}>×</button>}
+                    <button type="button" class="search-scan" aria-label={t.scan} title={t.scan} onClick={onScan}><Icon name="scan" /></button>
                 </label>
+                <p class="small check-hint">{t.checkHint}</p>
                 {isFocused && history.length > 0 && (
                     <ul class="history">
                         {history.map((item) => (

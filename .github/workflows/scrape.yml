@@ -40,6 +40,13 @@ jobs:
           # Optional. With it, Claude checks and translates each new recall once (src/classify.py).
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: PYTHONPATH=. uv run python -u src/main.py
+
+      # Ten years of recalls for the second-hand check (src/history.py). A failure here leaves yesterday's history
+      # in place and doesn't hold up the main list.
+      - name: Build the history
+        continue-on-error: true
+        timeout-minutes: 20
+        run: PYTHONPATH=. uv run python -u src/history.py
         
       - name: Save JSON Artifact
         uses: actions/upload-artifact@v4
@@ -94,6 +101,12 @@ jobs:
           for f in processed.json excluded.json status.json; do
             aws s3 cp "data/$f" "s3://$BUCKET/baby/scraped_date=latest/$f" --endpoint-url "$ENDPOINT"
           done
+          # Several MB as JSON; stored compressed, browsers unpack it.
+          if [ -s data/history.json ]; then
+            gzip -9 -c data/history.json > data/history.json.gz
+            aws s3 cp data/history.json.gz "s3://$BUCKET/baby/scraped_date=latest/history.json" \
+              --content-encoding gzip --content-type application/json --endpoint-url "$ENDPOINT"
+          fi
 
       # GitHub switches off scheduled workflows after 60 days without commits (this happened in June 2026).
       # Re-enabling it on every run resets that timer, so the daily scrape keeps going.

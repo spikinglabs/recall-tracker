@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Tuple
 import xml.etree.ElementTree as ET
 
+from src.codes import barcodes, models, unique
 from src.models import RecallInfo
 from src.scrapers.base import BaseScraper
 from src.scrapers.keywords import is_baby_related
@@ -34,23 +35,27 @@ class SafetyGateScraper(BaseScraper):
     WEEKS = 52  # the last year, as for the US sources; the archive keeps them after that
     CHILD_CATEGORIES = {"Toys", "Childcare articles and children's equipment"}
 
+    def reports(self) -> List[Tuple[str, str]]:
+        """Every weekly report, newest first, as (reference, address of its English XML). One list holds them all,
+        back to 2005, whatever year the address names."""
+        response = self.client.get(self.LIST.format(year=datetime.now(timezone.utc).year))
+        response.raise_for_status()
+        out = []
+        for r in ET.fromstring(response.content).iter("weeklyReport"):
+            url = r.findtext("URL") or ""
+            if "language=" in url:
+                # The listed address asks for the report's year as its language; English is wanted.
+                url = url.replace(f"language={url.split('language=')[1].split('&')[0]}", "language=en")
+                out.append((r.findtext("reference") or url, url))
+        return out
+
+    def report(self, url: str) -> str:
+        response = self.client.get(url, timeout=90.0)
+        response.raise_for_status()
+        return response.text
+
     def fetch_data(self) -> List[str]:
-        reports = []
-        year = datetime.now(timezone.utc).year
-        for y in (year, year - 1):
-            response = self.client.get(self.LIST.format(year=y))
-            response.raise_for_status()
-            reports += [r.findtext("URL") for r in ET.fromstring(response.content).iter("weeklyReport")]
-            if len(reports) >= self.WEEKS:
-                break
-        pages = []
-        for url in [u for u in reports if u][: self.WEEKS]:
-            # The listed address asks for the report's year as its language; English is wanted.
-            url = url.replace(f"language={url.split('language=')[1].split('&')[0]}", "language=en")
-            response = self.client.get(url, timeout=90.0)
-            response.raise_for_status()
-            pages.append(response.text)
-        return pages
+        return [self.report(url) for _, url in self.reports()[: self.WEEKS]]
 
     @staticmethod
     def short_reason(risk: str, danger: str, limit: int = 320) -> str | None:
@@ -97,6 +102,7 @@ class SafetyGateScraper(BaseScraper):
                 source=self.source_name,
                 reason=self.short_reason(text("riskType"), text("danger")),
                 company=brand or None,
+                codes=unique(barcodes(text("barcode")) + models(model)) or None,
                 annotation=None,
             ))
         return recalls

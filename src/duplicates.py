@@ -68,6 +68,15 @@ def same_product(a: RecallInfo, b: RecallInfo, ta: Set[str], tb: Set[str]) -> bo
     return overlap >= 0.8 and jaccard >= 0.6
 
 
+def barcodes_of(recall: RecallInfo) -> Set[str]:
+    return {c.lstrip("0") for c in recall.codes or [] if c.isdigit() and len(c) >= 8}
+
+
+def same_barcode(a: RecallInfo, b: RecallInfo) -> bool:
+    """One barcode is one product, whatever the titles say."""
+    return abs(a.publish_datetime - b.publish_datetime) <= WINDOW and bool(barcodes_of(a) & barcodes_of(b))
+
+
 def rank(recall: RecallInfo):
     order = SOURCE_ORDER.index(recall.source) if recall.source in SOURCE_ORDER else len(SOURCE_ORDER)
     return (order, recall.publish_datetime, recall.id)
@@ -93,10 +102,24 @@ def fold(recalls: List[RecallInfo]) -> List[RecallInfo]:
             x = parent[x]
         return x
 
-    for i, a in enumerate(items):
-        for b in items[i + 1:]:
-            if root(a.id) != root(b.id) and same_product(a, b, toks[a.id], toks[b.id]):
-                parent[root(b.id)] = root(a.id)
+    # Only recalls that share a word, a company or a barcode can match; an index of those keeps this fast on the
+    # ten-year history (thousands of recalls). Words in very many titles say nothing and are left out.
+    index: Dict[str, List[int]] = {}
+    for i, r in enumerate(items):
+        keys = {f"w:{w}" for w in toks[r.id]} | {f"b:{b}" for b in barcodes_of(r)}
+        for k in keys:
+            index.setdefault(k, []).append(i)
+    pairs = set()
+    for k, members in index.items():
+        if len(members) > 300 and not k.startswith("b:"):
+            continue
+        for x, i in enumerate(members):
+            for j in members[x + 1:]:
+                pairs.add((i, j))
+    for i, j in sorted(pairs):
+        a, b = items[i], items[j]
+        if root(a.id) != root(b.id) and (same_barcode(a, b) or same_product(a, b, toks[a.id], toks[b.id])):
+            parent[root(b.id)] = root(a.id)
 
     groups: Dict[str, List[RecallInfo]] = {}
     for r in items:
