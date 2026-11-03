@@ -15,12 +15,45 @@ export const regionName = (code, lang) => {
  *  ("Nestlé Deutschland AG  Baseler Straße 46 …"): the part before the first double space or line break. */
 export const companyName = (company) => (company || '').split(/\s{2,}|\n/)[0].trim()
 
-/** A short, stable code for a recall: its id is often the agency's full notice address, too long for a link.
- *  (FNV-1a, 32 bits, in base 36: a clash among a few hundred recalls is about one in ten thousand.) */
+/** Letters and digits that can't be mistaken for each other (no 0/O, no 1/I/L), as in Allo Outings' codes. */
+const ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ'
+export const CODE = /^[2-9A-HJKMNP-Z]{6}$/
+
+/** A recall's six-character code, like "7KQ3MX": in its link (?r=), and on the poster for typing into the
+ *  site's search box, since Rednote punishes links. It comes from the recall's id (often the agency's full
+ *  notice address), so it stays the same every day. FNV-1a, 32 bits, as in Allo Outings (src/lib/rednote-code.ts). */
 export function shortId(id) {
   let h = 0x811c9dc5
   for (const ch of String(id)) { h ^= ch.codePointAt(0); h = Math.imul(h, 0x01000193) >>> 0 }
-  return h.toString(36)
+  let out = ''
+  for (let i = 0; i < 6; i++) { out += ALPHABET[h % ALPHABET.length]; h = Math.floor(h / ALPHABET.length) }
+  return out
+}
+
+/** What someone typed into the search box, as a code, or null. */
+export const typedCode = (q) => {
+  const c = (q || '').trim().toUpperCase()
+  return CODE.test(c) ? c : null
+}
+
+/** What the poster's search box says: the name Chinese readers search for, the address for everyone else. */
+export const SEARCH_ZH = '召回追踪器 Recall Tracker'
+export const searchFor = (lang) => (lang === 'zh-CN' ? SEARCH_ZH : 'recalls.allo.land')
+
+/** The text for Rednote: no link (Rednote punishes them), the name to search for and the code, and tags. */
+export function rednoteText(recall, t) {
+  const title = getLocal(recall.title_i18n, 'zh-CN') || recall.title
+  const reason = getLocal(recall.reason, 'zh-CN')
+  const who = [companyName(recall.company), recall.country_sold_in && regionName(recall.country_sold_in, 'zh-CN')].filter(Boolean).join(' · ')
+  const tags = ['德国带娃', '召回', '母婴好物避雷', '宝宝用品', '德国生活', '德国妈妈']
+  if (recall.country_sold_in === 'US') tags.splice(4, 2, '美国带娃', '海淘')
+  return [
+    `⚠️ 召回：${title}`, who, reason, '',
+    `信息来自官方通知（${recall.source}），家里有的话请停止使用，按通知处理。`,
+    `浏览器搜索「${SEARCH_ZH}」，在网站搜索框输入编号 ${shortId(recall.id)} 就能看到这条召回，还有更多德国和美国的婴幼儿产品召回。`,
+    '',
+    tags.map(x => `#${x}`).join(' '),
+  ].filter((l, i, a) => l !== '' || a[i - 1] !== '').join('\n')
 }
 
 /** The address that opens the site on this one recall, in the sharer's language unless the reader chose one. */
@@ -94,7 +127,7 @@ function roundRect(ctx, x, y, w, h, r) {
 }
 
 /** The recall as a 1080×1440 PNG: German flag strip, the red recall tag, the gold date sign, title, why, and the link. */
-export async function posterPng(recall, t, lang, link) {
+export async function posterPng(recall, t, lang) {
   await Promise.all(["400 40px 'Atkinson Hyperlegible'", "700 40px 'Atkinson Hyperlegible'", "700 40px 'Barlow Semi Condensed'", "800 40px 'Bricolage Grotesque Variable'"]
     .map(f => document.fonts?.load(f).catch(() => undefined)))
   const { w, h } = POSTER
@@ -182,22 +215,49 @@ export async function posterPng(recall, t, lang, link) {
   ctx.fillRect(X, y, 96, 8)
   y += 70
   const reason = getLocal(recall.reason, lang)
-  const foot = h - 250
+  const foot = h - 260
   ctx.font = `400 44px ${BODY}`
   ctx.fillStyle = C.ink
-  const room = Math.max(1, Math.floor((foot - y) / 62))
+  const room = Math.max(1, Math.floor((foot - 80 - y) / 62) + 1)
   for (const l of clamp(ctx, wrap(ctx, reason, W), room, W)) { ctx.fillText(l, X, y); y += 62 }
 
-  // Foot: what to do, the source, and the address.
-  ctx.fillStyle = C.line
-  ctx.fillRect(X, foot + 20, W, 3)
+  // Foot: what to do; then, with no link so the picture can go anywhere (Rednote included), a search box
+  // with the site to search for and the recall's code to type into the site's search box.
   ctx.font = `700 38px ${BODY}`
   ctx.fillStyle = C.ink
-  ctx.fillText(clamp(ctx, wrap(ctx, t.posterCheck, W), 1, W)[0], X, foot + 92)
-  ctx.font = `400 34px ${BODY}`
+  ctx.fillText(clamp(ctx, wrap(ctx, t.posterCheck, W), 1, W)[0], X, foot - 6)
+  const code = shortId(recall.id)
+  ctx.font = `700 56px ${SIGN}`
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '2px'
+  const cw = ctx.measureText(code).width + 56
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px'
+  const boxY = foot + 40, boxH = 104, boxW = W - cw - 20
+  ctx.fillStyle = '#ffffff'
+  roundRect(ctx, X, boxY, boxW, boxH, boxH / 2); ctx.fill()
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 3
+  roundRect(ctx, X, boxY, boxW, boxH, boxH / 2); ctx.stroke()
+  ctx.strokeStyle = '#5b6066'; ctx.lineWidth = 6; ctx.lineCap = 'round'
+  ctx.beginPath(); ctx.arc(X + 58, boxY + 47, 17, 0, Math.PI * 2); ctx.stroke()
+  ctx.beginPath(); ctx.moveTo(X + 71, boxY + 60); ctx.lineTo(X + 86, boxY + 75); ctx.stroke()
+  ctx.fillStyle = C.ink
+  let sz = 44
+  const what = searchFor(lang)
+  for (; sz > 28; sz -= 2) { ctx.font = `700 ${sz}px ${BODY}`; if (ctx.measureText(what).width <= boxW - 130) break }
+  ctx.textBaseline = 'middle'
+  ctx.fillText(what, X + 110, boxY + boxH / 2 + 2)
+  // The code, in Verkehrsblau like Outings' codes.
   ctx.fillStyle = C.blau
-  const shown = link.replace(/^https?:\/\//, '').replace(/[?&]lang=[^&]*/, '')
-  ctx.fillText(clamp(ctx, [`${recall.source} · ${shown}`], 1, W)[0], X, foot + 150)
+  roundRect(ctx, X + W - cw, boxY, cw, boxH, 14); ctx.fill()
+  ctx.fillStyle = '#ffffff'
+  ctx.font = `700 56px ${SIGN}`
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '2px'
+  ctx.textAlign = 'center'
+  ctx.fillText(code, X + W - cw / 2, boxY + boxH / 2 + 3)
+  ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic'
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px'
+  ctx.font = `400 30px ${BODY}`
+  ctx.fillStyle = C.soft
+  ctx.fillText(clamp(ctx, wrap(ctx, t.posterCode.replace('{source}', recall.source), W), 1, W)[0], X, boxY + boxH + 52)
 
   return new Promise((ok, fail) => cv.toBlob(b => (b ? ok(b) : fail(new Error('no picture'))), 'image/png'))
 }

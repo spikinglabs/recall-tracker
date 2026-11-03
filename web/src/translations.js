@@ -1,5 +1,7 @@
 export const translations = {
     en: {
+        posterCode: "Type the code into the search box there. Official notice: {source}",
+        posterNote: "The picture has no link, so it works on any app. The text that comes with it has the link.",
         recallTag: "Recall",
         shareVia: "Official notice from {source}, via Recall Tracker",
         share: "Share",
@@ -42,6 +44,8 @@ export const translations = {
         categories: {"food": "Food & formula", "feeding": "Feeding", "toys": "Toys", "sleep": "Sleep", "travel": "Car seats & strollers", "clothing": "Clothing", "furniture": "Furniture", "health": "Health & care", "other": "Other"}
     },
     de: {
+        posterCode: "Den Code dort ins Suchfeld eingeben. Amtliche Meldung: {source}",
+        posterNote: "Das Bild hat keinen Link und passt in jede App. Der Text dazu enthält den Link.",
         recallTag: "Rückruf",
         shareVia: "Amtliche Meldung von {source}, über Rückruf-Tracker",
         share: "Teilen",
@@ -84,6 +88,8 @@ export const translations = {
         categories: {"food": "Lebensmittel & Säuglingsnahrung", "feeding": "Füttern", "toys": "Spielzeug", "sleep": "Schlafen", "travel": "Kindersitze & Kinderwagen", "clothing": "Kleidung", "furniture": "Möbel", "health": "Gesundheit & Pflege", "other": "Sonstiges"}
     },
     es: {
+        posterCode: "Escribe el código en el buscador de la web. Aviso oficial: {source}",
+        posterNote: "La imagen no lleva enlace, así que sirve para cualquier app. El texto que la acompaña sí lo lleva.",
         recallTag: "Retirada",
         shareVia: "Aviso oficial de {source}, vía Rastreador de Retiros",
         share: "Compartir",
@@ -126,6 +132,8 @@ export const translations = {
         categories: {"food": "Alimentos y fórmula", "feeding": "Alimentación", "toys": "Juguetes", "sleep": "Sueño", "travel": "Sillas de auto y cochecitos", "clothing": "Ropa", "furniture": "Muebles", "health": "Salud y cuidado", "other": "Otros"}
     },
     fr: {
+        posterCode: "Tapez le code dans la recherche du site. Avis officiel : {source}",
+        posterNote: "L'image n'a pas de lien, elle va dans toutes les applis. Le texte qui l'accompagne contient le lien.",
         recallTag: "Rappel",
         shareVia: "Avis officiel de {source}, via Suivi des Rappels",
         share: "Partager",
@@ -168,6 +176,11 @@ export const translations = {
         categories: {"food": "Alimentation et lait infantile", "feeding": "Repas", "toys": "Jouets", "sleep": "Sommeil", "travel": "Sièges auto et poussettes", "clothing": "Vêtements", "furniture": "Meubles", "health": "Santé et soins", "other": "Autres"}
     },
     "zh-CN": {
+        posterCode: "在网站搜索框输入编号即可查看。官方通知：{source}",
+        posterNote: "图片不带链接，可以发到任何应用。",
+        posterNoteZh: "发小红书的文字不带链接，只写搜索名称和编号；其他应用的文字带链接。",
+        rednoteCopy: "复制小红书文字",
+        rednoteCopied: "小红书文字已复制，发布时粘贴就行。",
         recallTag: "召回",
         shareVia: "来自 {source} 的官方通知，经召回追踪器",
         share: "分享",

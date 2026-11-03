@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'preact/hooks'
 import { RecallList } from './components/RecallList'
 import { SearchBar } from './components/SearchBar'
 import { PosterSheet } from './components/PosterSheet'
-import { shortId } from './share'
+import { shortId, typedCode } from './share'
 import { translations } from './translations'
 import { Icon } from './icons'
 import '@fontsource/atkinson-hyperlegible/400.css'
@@ -67,6 +67,7 @@ export function App() {
   const [poster, setPoster] = useState(null)
   const showAll = () => {
     setOnlyId(null)
+    if (typedCode(searchQuery)) setSearchQuery('')
     history.replaceState(null, '', location.pathname)
   }
   const [selectedCountry, setSelectedCountry] = useState(() => {
@@ -180,7 +181,10 @@ export function App() {
   const activeCategory = categories.includes(selectedCategory) ? selectedCategory : 'All'
   const filteredRecalls = activeCategory === 'All' ? matching : matching.filter(r => r.category === activeCategory)
   // The recall a shared link names, shown on its own; a link to a recall that has left the list shows them all.
-  const sharedRecall = onlyId ? recalls.find(r => shortId(r.id) === onlyId) : null
+  // A code typed into the search box (from a poster, or a Rednote note) opens that recall the same way.
+  const typed = typedCode(searchQuery)
+  const wanted = onlyId || typed
+  const sharedRecall = wanted ? recalls.find(r => shortId(r.id) === wanted.toUpperCase()) : null
   const shown = sharedRecall ? [sharedRecall] : filteredRecalls
   // On a phone the shared recall would sit below the search; bring it into view once it's there.
   const sharedId = sharedRecall?.id
