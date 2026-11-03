@@ -22,9 +22,14 @@ class RecallInfo(BaseModel):
     first_seen: Optional[datetime] = None
     last_seen: Optional[datetime] = None
     scraped_datetime: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    # Other reports of the same product (another source, or another shop), folded in by src/duplicates.py.
+    also: Optional[List["RecallInfo"]] = None
 
     @computed_field
     def publish_date(self) -> str:
         """String representation of publish_datetime (YYYY-MM-DD) useful for partitioning"""
         return self.publish_datetime.strftime("%Y-%m-%d")
 
+
+
+RecallInfo.model_rebuild()

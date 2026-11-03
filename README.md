@@ -1,5 +1,5 @@
 # recall-tracker
-Collects recalls of baby and children's products every day (US CPSC, US FDA, Lebensmittelwarnung.de) into one public
+Collects recalls of baby and children's products every day (US CPSC, US FDA, Lebensmittelwarnung.de, EU Safety Gate, UK OPSS) into one public
 JSON file on Cloudflare R2, and shows them at https://recalls.allo.land/ (formerly tracker.babybaras.com, which
 redirects there). Allo Auri reads the same file.
 
@@ -35,3 +35,11 @@ is deployed again after every scrape, so the pages follow the data.
     uv sync
     PYTHONPATH=. uv run pytest -q
     PYTHONPATH=. uv run python -u src/main.py
+
+## Duplicates
+
+The same product often comes from more than one source (a UK report and an EU Safety Gate alert, a German notice
+and the German alert in Safety Gate), and the UK writes one report per marketplace. After classification,
+`src/duplicates.py` folds these into one recall: it compares the English titles (and company names), keeps the
+report from the most specific source, and puts the others in its `also` list. The site links them as
+"Also reported by", and a code from a folded report still opens the recall.

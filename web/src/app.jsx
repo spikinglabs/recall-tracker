@@ -183,7 +183,10 @@ export function App() {
       compCmp.includes(query) ||
       reasonCmp.includes(query)
     )
-    const matchesCountry = selectedCountry === 'All' || recall.country_sold_in === selectedCountry
+    // EU Safety Gate alerts concern the whole single market, so they show with Germany too, and German ones with the EU.
+    const cc = recall.country_sold_in
+    const matchesCountry = selectedCountry === 'All' || cc === selectedCountry ||
+      (selectedCountry !== 'US' && cc !== 'US' && (cc === 'EU' || selectedCountry === 'EU'))
     return matchesSearch && matchesCountry
   })
   const categoryCounts = {}
@@ -194,7 +197,8 @@ export function App() {
   // A code typed into the search box (from a poster, or a Rednote note) opens that recall the same way.
   const typed = typedCode(searchQuery)
   const wanted = onlyId || typed
-  const sharedRecall = wanted ? recalls.find(r => shortId(r.id) === wanted.toUpperCase()) : null
+  // A code can also name a report that was folded into another recall as a duplicate.
+  const sharedRecall = wanted ? recalls.find(r => [r, ...(r.also || [])].some(x => shortId(x.id) === wanted.toUpperCase())) : null
   const shown = sharedRecall ? [sharedRecall] : filteredRecalls
   // On a phone the shared recall would sit below the search; bring it into view once it's there.
   const sharedId = sharedRecall?.id
