@@ -67,6 +67,8 @@ export function RecallCard({ recall, t, lang, onPoster, only }) {
     const where = recall.country_sold_in === 'EU'
         ? (places.length ? t.reportedIn.replace('{country}', places.map(c => regionName(c, lang)).join(', ')) : '')
         : places.length && places.length < 16 ? places.join(', ') : ''
+    // Other reports of the same product: one link per source (the UK writes one report per shop).
+    const also = [...new Map((recall.also || []).filter(a => a.source !== recall.source).map(a => [a.source, a])).values()]
     const dateText = isNaN(published) ? recall.publish_date : published.toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' })
 
     return (
@@ -84,6 +86,11 @@ export function RecallCard({ recall, t, lang, onPoster, only }) {
                     {where && <span class="pill where"><span aria-hidden="true">📍</span><span>{where}</span></span>}
                 </div>
                 <div class="trust"><b>{t.officialNotice} ↗</b> · {recall.source} · <time datetime={recall.publish_date}>{dateText}</time></div>
+                {also.length > 0 && (
+                    <div class="trust also">{t.alsoReported}{' '}
+                        {also.map((a, i) => <span key={a.url}>{i > 0 && ' · '}<a href={a.url} target="_blank" rel="noopener noreferrer">{a.source} ↗</a></span>)}
+                    </div>
+                )}
                 <ShareRow recall={recall} t={t} lang={lang} onPoster={onPoster} />
             </div>
         </article>

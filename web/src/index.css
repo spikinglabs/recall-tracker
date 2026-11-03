@@ -102,6 +102,8 @@ h1, h2, h3, .meta, .orig { overflow-wrap: anywhere; }
 .pill.where { display: flex; gap: 4px; align-items: flex-start; border-radius: 10px; padding: 3px 8px; line-height: 1.4; background: transparent; border: 1px dashed var(--ink-soft); color: var(--ink-soft); white-space: normal; }
 .trust { font-size: .78rem; color: var(--ink-soft); margin-top: 6px; }
 .trust b { color: var(--blau); font-weight: 700; }
+.trust.also { position: relative; z-index: 1; margin-top: 2px; }
+.trust.also a { font-weight: 700; text-decoration: none; }
 
 @media (max-width: 480px) {
   .stamp { width: 52px; }

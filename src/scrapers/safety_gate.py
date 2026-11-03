@@ -31,7 +31,7 @@ class SafetyGateScraper(BaseScraper):
     country_code = "EU"
 
     LIST = "https://ec.europa.eu/safety-gate-alerts/api/download/weeklyReport/list/xml/{year}"
-    WEEKS = 12  # about three months on each run; the archive keeps them after that
+    WEEKS = 52  # the last year, as for the US sources; the archive keeps them after that
     CHILD_CATEGORIES = {"Toys", "Childcare articles and children's equipment"}
 
     def fetch_data(self) -> List[str]:

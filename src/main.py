@@ -5,11 +5,13 @@ from collections import Counter
 from datetime import datetime, timezone
 
 from src.archive import merge
+from src.duplicates import fold
 from src.classify import Classifier
 from src.scrapers.cpsc import CPSCScraper
 from src.scrapers.fda import FDAScraper
 from src.scrapers.germany import GermanyScraper
 from src.scrapers.safety_gate import SafetyGateScraper
+from src.scrapers.uk_opss import UKScraper
 from src.translate import Translator, known_translations, load_previous
 
 
@@ -24,6 +26,7 @@ def main():
     scrapers = [
         GermanyScraper(),
         SafetyGateScraper(),
+        UKScraper(),
         FDAScraper(),
         CPSCScraper(),
     ]
@@ -52,7 +55,9 @@ def main():
     previous = load_previous()
     # Recalls Claude judged to be adult products, published separately for review; reloaded so their verdicts are reused.
     previous_excluded = load_previous("excluded.json")
-    earlier = {item["id"]: item for item in previous + previous_excluded if isinstance(item, dict) and item.get("id")}
+    # Reports folded into another recall on an earlier run sit in its "also" list; take them out to compare afresh.
+    flat = [x for item in previous + previous_excluded if isinstance(item, dict) for x in [item, *(item.get("also") or [])]]
+    earlier = {item["id"]: {k: v for k, v in item.items() if k != "also"} for item in flat if isinstance(item, dict) and item.get("id")}
 
     all_recalls = merge(found, list(earlier.values()), now)
 
@@ -72,9 +77,14 @@ def main():
         recall.annotation = translator.lookup(done, recall.annotation)
     print("Translations:", translator.stats, flush=True)
 
-    all_recalls.sort(key=lambda x: x.publish_datetime, reverse=True)
-    kept = [r for r in all_recalls if r.for_children is not False]
+    # The same product from several sources (or several shops) becomes one recall, after Claude has given each
+    # report an English title to compare.
+    kept = fold([r for r in all_recalls if r.for_children is not False])
     excluded = [r for r in all_recalls if r.for_children is False]
+    folded = sum(len(r.also or []) for r in kept)
+    print(f"Duplicates folded into other recalls: {folded}")
+    kept.sort(key=lambda x: x.publish_datetime, reverse=True)
+    excluded.sort(key=lambda x: x.publish_datetime, reverse=True)
     print("Recalls per source:", dict(Counter(r.source for r in kept)))
     print(f"Excluded as adult products: {len(excluded)}")
     for r in excluded:
@@ -90,6 +100,7 @@ def main():
         "recalls": len(kept),
         "found_today": len(found),
         "excluded": len(excluded),
+        "duplicates": folded,
         "sources": sources,
     })
     print(f"Successfully exported {len(kept)} records to data/processed.json")
