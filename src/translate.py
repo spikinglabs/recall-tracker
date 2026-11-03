@@ -14,7 +14,12 @@ import httpx
 from deep_translator import GoogleTranslator
 
 LANGS = ["en", "de", "es", "fr", "zh-CN"]
-PREVIOUS_URL = "https://pub-f36c3831e82845e4af2d54940ea6c32d.r2.dev/baby/scraped_date%3Dlatest/processed.json"
+# Where the latest published files are read back from: the allo.land bucket first, then the old r2.dev bucket
+# (still written while readers move over, and the only copy before the first run that writes the new bucket).
+LATEST = [
+    "https://recalls-api.allo.land/baby/scraped_date%3Dlatest/",
+    "https://pub-f36c3831e82845e4af2d54940ea6c32d.r2.dev/baby/scraped_date%3Dlatest/",
+]
 
 
 def clean(text: str) -> str:
@@ -34,15 +39,19 @@ def known_translations(previous: Iterable[dict]) -> Dict[str, Dict[str, str]]:
     return known
 
 
-def load_previous(url: str = PREVIOUS_URL) -> List[dict]:
-    try:
-        response = httpx.get(url, timeout=30)
-        response.raise_for_status()
-        data = response.json()
-        return data if isinstance(data, list) else []
-    except Exception as e:
-        print(f"Could not load the previous file ({e!r}); translating everything.", flush=True)
-        return []
+def load_previous(name: str = "processed.json", bases: List[str] = LATEST) -> List[dict]:
+    """The file published on the last run, from the first place that has it; [] if none does."""
+    for base in bases:
+        try:
+            response = httpx.get(base + name, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+            if isinstance(data, list):
+                return data
+        except Exception as e:
+            print(f"Could not load {base + name} ({e!r}).", flush=True)
+    print(f"No previous {name} found; starting without it.", flush=True)
+    return []
 
 
 def batches(texts: List[str], limit: int = 4500) -> Iterable[List[str]]:
