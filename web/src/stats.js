@@ -31,62 +31,87 @@ const count = (items, key) => {
 }
 const ranked = (obj) => Object.entries(obj).sort((a, b) => b[1] - a[1])
 
-/** The numbers for the page. `now` is a Date; `history` may be null (not built or not loaded yet). */
-export function computeStats(recalls, history, now = new Date()) {
-  const yearAgo = new Date(now)
-  yearAgo.setUTCFullYear(now.getUTCFullYear() - 1)
-  const dateOf = (r) => String(r.publish_date || r.publish_datetime || r.date || '').slice(0, 10)
-  const year = recalls.filter(r => dateOf(r) >= yearAgo.toISOString().slice(0, 10))
+const day = (d) => d.toISOString().slice(0, 10)
+const dateOf = (r) => String(r.publish_date || r.publish_datetime || r.date || '').slice(0, 10)
 
-  // The last twelve whole months, oldest first, as "2026-03" (the month under way would look like a drop).
-  const months = []
-  for (let i = 12; i >= 1; i--) {
-    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1))
-    months.push(d.toISOString().slice(0, 7))
-  }
-  const perMonth = count(year, r => dateOf(r).slice(0, 7))
-
-  const sorted = year.filter(r => r.category)
-  const withHazard = year.map(hazardsOf)
-
-  // EU countries that reported the alerts (Safety Gate names the reporting country).
-  const reporters = count(year.filter(r => r.country_sold_in === 'EU'), r => r.location_sold_in || [])
-
-  const out = {
-    total: year.length,
-    regions: count(year, r => regionOf(r.country_sold_in)),
-    months: months.map(m => [m, perMonth[m] || 0]),
-    categories: ranked(count(sorted, r => r.category)),
-    unsorted: year.length - sorted.length,
-    hazards: ranked(count(withHazard, h => h)),
-    hazardKnown: withHazard.filter(h => h.length).length,
-    reporters: ranked(reporters).slice(0, 10),
-    sources: ranked(count(year, r => [r.source, ...(r.also || []).map(a => a.source)].filter((s, i, a) => a.indexOf(s) === i))),
-    years: null,
-  }
-
-  // Ten years by region. Old EU weeks are read a batch per day (src/history.py), so a year counts for Europe
-  // only once nearly all its weekly reports are in.
+/** The time ranges on offer: rolling ones from the list, and whole years once the history is loaded. EU years
+ *  count only once nearly all their weekly reports are read (src/history.py reads old ones a batch a day). */
+export function ranges(history, now = new Date()) {
+  const back = (days) => { const d = new Date(now); d.setUTCDate(d.getUTCDate() - days); return day(d) }
+  const out = [
+    { id: '30d', from: back(30), to: day(now) },
+    { id: '3m', from: back(91), to: day(now) },
+    { id: '12m', from: back(365), to: day(now) },
+  ]
   if (history?.recalls?.length) {
     const done = count(history.reports_done || [], ref => ref.split('-')[1])
-    const first = Number(String(history.since).slice(0, 4)) + 1 // the first year is only partly inside ten years
-    const last = now.getUTCFullYear()
-    const byYear = {}
-    for (const r of history.recalls) {
-      const y = Number(String(r.date).slice(0, 4))
-      if (y < first || y > last) continue
-      const reg = regionOf(r.country)
-      ;(byYear[y] ||= { europe: 0, gb: 0, us: 0 })[reg]++
-    }
-    out.years = []
-    for (let y = first; y <= last; y++) {
-      const row = byYear[y] || { europe: 0, gb: 0, us: 0 }
-      const complete = y === last || (done[y] || 0) >= 45
-      out.years.push({ year: y, europe: complete ? row.europe : null, gb: row.gb, us: row.us })
-    }
-    // The UK list starts in 2021 or so; years before that have no UK data rather than zero recalls.
-    const ukFrom = out.years.find(r => r.gb > 0)?.year
-    for (const r of out.years) if (ukFrom && r.year < ukFrom) r.gb = null
+    const thisYear = now.getUTCFullYear()
+    const first = Number(String(history.since).slice(0, 4)) + 1
+    const complete = []
+    for (let y = thisYear - 1; y >= first && (done[y] || 0) >= 45; y--) complete.push(y)
+    if (complete.length >= 2) out.push({ id: 'all', from: `${complete[complete.length - 1]}-01-01`, to: day(now) })
+    out.push({ id: String(thisYear), from: `${thisYear}-01-01`, to: day(now), year: thisYear })
+    for (const y of complete) out.push({ id: String(y), from: `${y}-01-01`, to: `${y}-12-31`, year: y })
   }
   return out
+}
+
+// Bars over time: weeks for a short range, months up to about a year, years beyond.
+function bins(from, to) {
+  const span = (new Date(to) - new Date(from)) / 864e5
+  const out = []
+  if (span <= 100) {
+    const d = new Date(`${from}T00:00:00Z`)
+    d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)) // the Monday of the first week
+    for (; day(d) <= to; d.setUTCDate(d.getUTCDate() + 7)) {
+      const end = new Date(d); end.setUTCDate(end.getUTCDate() + 6)
+      out.push({ key: day(d), from: day(d), to: day(end), unit: 'week' })
+    }
+  } else if (span <= 400) {
+    const d = new Date(`${from.slice(0, 7)}-01T00:00:00Z`)
+    for (; day(d) <= to; d.setUTCMonth(d.getUTCMonth() + 1)) {
+      const end = new Date(d); end.setUTCMonth(end.getUTCMonth() + 1); end.setUTCDate(0)
+      out.push({ key: day(d).slice(0, 7), from: day(d), to: day(end), unit: 'month' })
+    }
+  } else {
+    for (let y = Number(from.slice(0, 4)); y <= Number(to.slice(0, 4)); y++) out.push({ key: String(y), from: `${y}-01-01`, to: `${y}-12-31`, unit: 'year' })
+  }
+  return out
+}
+
+/** The numbers for one time range. `recalls` is the list (with reasons, kinds and reporting countries);
+ *  `history` (ten years, titles only) may be null. */
+export function computeStats(recalls, history, range) {
+  const { from, to } = range
+  const inRange = (r) => { const d = dateOf(r); return d >= from && d <= to }
+  // The list has the details; the history adds older recalls (counted, but without reasons or kinds).
+  const known = new Set(recalls.flatMap(r => [r.id, ...(r.also || []).map(a => a.id)]))
+  const rich = recalls.filter(inRange)
+  const old = (history?.recalls || []).filter(r => !known.has(r.id) && !(r.also || []).some(a => known.has(a.id)) && inRange(r))
+  const all = [...rich.map(r => ({ date: dateOf(r), region: regionOf(r.country_sold_in), sources: [r.source, ...(r.also || []).map(a => a.source)] })),
+    ...old.map(r => ({ date: dateOf(r), region: regionOf(r.country), sources: [r.source, ...(r.also || []).map(a => a.source)] }))]
+
+  const listFrom = recalls.reduce((m, r) => (dateOf(r) && dateOf(r) < m ? dateOf(r) : m), '9999')
+  const today = day(new Date())
+  const time = bins(from, to).map(b => ({ ...b, n: all.filter(r => r.date >= b.from && r.date <= b.to).length, partial: b.to > today }))
+
+  const sorted = rich.filter(r => r.category)
+  const withHazard = rich.map(hazardsOf)
+  const reporters = count(rich.filter(r => r.country_sold_in === 'EU'), r => r.location_sold_in || [])
+  const ukFrom = (history?.recalls || []).filter(r => r.country === 'GB').reduce((m, r) => (r.date < m ? r.date : m), listFrom)
+
+  return {
+    range,
+    total: all.length,
+    regions: count(all, r => r.region),
+    time,
+    detailed: rich.length,
+    detailsFrom: from < listFrom ? listFrom : null, // reasons and kinds only go back this far
+    ukFrom: from < ukFrom.slice(0, 4) + '-01-01' ? ukFrom.slice(0, 4) : null,
+    categories: ranked(count(sorted, r => r.category)),
+    unsorted: rich.length - sorted.length,
+    hazards: ranked(count(withHazard, h => h)),
+    reporters: ranked(reporters).slice(0, 10),
+    sources: ranked(count(all, r => r.sources.filter((x, i, a) => x && a.indexOf(x) === i))),
+  }
 }

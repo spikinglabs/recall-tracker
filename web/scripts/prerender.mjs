@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url'
 import { translations } from '../src/translations.js'
 import { companyName, getLocal, regionName, shortId } from '../src/share.js'
 import { LANG_DIR, SITE, homePath, recallPath, statsPath } from '../src/paths.js'
-import { computeStats, REGIONS } from '../src/stats.js'
+import { computeStats, ranges, REGIONS } from '../src/stats.js'
 
 const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist')
 const DATA = [
@@ -82,7 +82,8 @@ const template = await readFile(join(DIST, 'index.html'), 'utf8')
 const recalls = ((await fetchJson('processed.json')) || [])
   .sort((a, b) => String(b.publish_date).localeCompare(String(a.publish_date)))
 const status = await fetchJson('status.json')
-const stats = computeStats(recalls, await fetchJson('history.json'))
+const historyData = await fetchJson('history.json')
+const stats = computeStats(recalls, historyData, ranges(historyData).find(r => r.id === '12m'))
 const lastmod = (status?.updated || new Date().toISOString()).slice(0, 10)
 const urls = []
 
@@ -120,7 +121,7 @@ for (const lang of LANGS) {
     const regions = REGIONS.map(r => `${t.statsRegions[r]} ${stats.regions[r] || 0}`).join(', ')
     const body = `<main class="app"><p><a href="${path}">${esc(t.title)}</a></p><section class="ask"><h1>${esc(t.statsTitle)}</h1><p class="sub">${esc(t.statsIntro)}</p></section>` +
       `<p><b>${stats.total}</b> ${esc(t.statsTotal)} (${esc(regions)})</p>` +
-      `<h2>${esc(t.statsPerMonth)}</h2>${list(stats.months, (m) => m)}` +
+      `<h2>${esc(t.statsPerMonth)}</h2>${list(stats.time.map(b => [b.key, b.n]), (m) => m)}` +
       `<h2>${esc(t.statsHazards)}</h2>${list(stats.hazards, (k) => t.hazards[k] || k)}` +
       (stats.categories.length ? `<h2>${esc(t.statsKinds)}</h2>${list(stats.categories, (k) => t.categories[k] || k)}` : '') +
       (stats.reporters.length ? `<h2>${esc(t.statsReporters)}</h2>${list(stats.reporters, (k) => regionName(k, lang))}` : '') +
