@@ -69,6 +69,8 @@ export function RecallCard({ recall, t, lang, onPoster, only }) {
         : places.length && places.length < 16 ? places.join(', ') : ''
     // Other reports of the same product: one link per source (the UK writes one report per shop).
     const also = [...new Map((recall.also || []).filter(a => a.source !== recall.source).map(a => [a.source, a])).values()]
+    // Barcodes and model numbers, to compare with the product in hand.
+    const codes = [...new Set([...(recall.codes || []), ...(recall.also || []).flatMap(a => a.codes || [])])]
     const dateText = isNaN(published) ? recall.publish_date : published.toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' })
 
     return (
@@ -79,6 +81,7 @@ export function RecallCard({ recall, t, lang, onPoster, only }) {
                 {original && <p class="orig" lang={recall.country_sold_in === 'DE' ? 'de' : 'en'}>{original}</p>}
                 <div class="meta">{[companyName(recall.company), country].filter(Boolean).join(' · ')}</div>
                 {reason && <p class="reason">{reason}</p>}
+                {codes.length > 0 && <p class="codes small"><span>{t.codesLabel}</span> {codes.slice(0, 6).join(' · ')}{codes.length > 6 ? ' …' : ''}</p>}
                 {note && <p class="note">{note}</p>}
                 <div class="pills">
                     {isNew && <span class="pill new">{t.newPill}</span>}

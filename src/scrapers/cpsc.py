@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 import json
 from typing import List
+from src.codes import barcodes, models, unique
 from src.models import RecallInfo
 from src.scrapers.base import BaseScraper
 from src.scrapers.keywords import is_baby_related
@@ -14,9 +15,12 @@ class CPSCScraper(BaseScraper):
     URL = "https://www.saferproducts.gov/RestWebServices/Recall"
     DAYS = 365
 
-    def fetch_data(self) -> str:
-        since = (datetime.now(timezone.utc) - timedelta(days=self.DAYS)).strftime("%Y-%m-%d")
-        response = self.client.get(self.URL, params={"format": "json", "RecallDateStart": since})
+    def fetch_data(self, start=None, end=None) -> str:
+        since = start or (datetime.now(timezone.utc) - timedelta(days=self.DAYS)).strftime("%Y-%m-%d")
+        params = {"format": "json", "RecallDateStart": since}
+        if end:
+            params["RecallDateEnd"] = end
+        response = self.client.get(self.URL, params=params, timeout=120.0)
         response.raise_for_status()
         return response.text
 
@@ -42,6 +46,10 @@ class CPSCScraper(BaseScraper):
                 source=self.source_name,
                 reason=hazards or item.get("Title"),
                 company=company,
+                codes=unique(
+                    [b for u in item.get("ProductUPCs") or [] for b in barcodes(str(u.get("UPC") if isinstance(u, dict) else u))]
+                    + [m for p in products for m in models(p.get("Model") or "")]
+                ) or None,
                 annotation=None,  # the title repeats the product and hazard
             ))
         return recalls

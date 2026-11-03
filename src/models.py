@@ -12,6 +12,8 @@ class RecallInfo(BaseModel):
     source: str  # e.g., "Lebensmittelwarnung", "FDA"
     reason: Optional[Union[str, Dict[str, str]]] = None
     company: Optional[str] = None
+    # Barcodes (EAN/UPC) and model numbers of the recalled products, where the source gives them (src/codes.py).
+    codes: Optional[List[str]] = None
     annotation: Optional[Union[str, Dict[str, str]]] = None
     # Filled in by the classification step (src/classify.py); None when it hasn't run for this recall.
     title_i18n: Optional[Dict[str, str]] = None  # the title in each site language; `title` stays the original

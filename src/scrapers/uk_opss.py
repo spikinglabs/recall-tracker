@@ -21,15 +21,27 @@ class UKScraper(BaseScraper):
     CHILD_CATEGORIES = {"toys", "childcare-articles-childrens-equipment"}
     PREFIX = re.compile(r"^\s*Product (Recall|Safety Report|Safety Alert)\s*:\s*", re.IGNORECASE)
 
-    def fetch_data(self) -> str:
+    def fetch_data(self, start: int = 0) -> str:
         response = self.client.get(self.URL, params={
             "filter_format": "product_safety_alert_report_recall",
             "order": "-public_timestamp",
             "count": 1000,
+            "start": start,
             "fields": "title,link,public_timestamp,description,product_category",
         })
         response.raise_for_status()
         return response.text
+
+    def scrape_all(self) -> List[RecallInfo]:
+        """Every page of the list (a few thousand reports since 2018), for the history."""
+        recalls, start = [], 0
+        while True:
+            page = self.fetch_data(start)
+            recalls += self.parse_data(page)
+            total = json.loads(page).get("total", 0)
+            start += 1000
+            if start >= total:
+                return recalls
 
     def parse_data(self, raw_data: str) -> List[RecallInfo]:
         since = datetime.now(timezone.utc) - timedelta(days=self.DAYS)
