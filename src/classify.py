@@ -9,6 +9,7 @@ Every result is published with the recall, and the next run reuses it, so each r
 Without ANTHROPIC_API_KEY the run skips this step and keeps every recall, as before.
 """
 import os
+import re
 import time
 from enum import Enum
 from typing import Callable, Dict, Iterable, List, Optional
@@ -43,7 +44,13 @@ class Texts(BaseModel):
     zh_CN: str = Field(description="Simplified Chinese")
 
     def as_dict(self) -> Dict[str, str]:
-        return {"en": self.en, "de": self.de, "es": self.es, "fr": self.fr, "zh-CN": self.zh_CN}
+        texts = {"en": self.en, "de": self.de, "es": self.es, "fr": self.fr, "zh-CN": self.zh_CN}
+        return {k: unescape(v) for k, v in texts.items()}
+
+
+def unescape(text: str) -> str:
+    """Claude sometimes writes Chinese or accented letters as escapes ("\\u7a92\\u606f"); turn them back."""
+    return re.sub(r"\\u([0-9a-fA-F]{4})", lambda m: chr(int(m.group(1), 16)), text or "")
 
 
 class Verdict(BaseModel):
@@ -108,9 +115,10 @@ def copy_from(recall: RecallInfo, earlier: dict) -> bool:
     recall.for_children = earlier["for_children"]
     recall.rules = earlier.get("rules")
     recall.category = earlier["category"]
-    recall.title_i18n = earlier.get("title_i18n")
+    fix = lambda d: {k: unescape(v) for k, v in d.items()} if isinstance(d, dict) else d
+    recall.title_i18n = fix(earlier.get("title_i18n"))
     if isinstance(earlier.get("reason"), dict):
-        recall.reason = earlier["reason"]
+        recall.reason = fix(earlier["reason"])
     return True
 
 
