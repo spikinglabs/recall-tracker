@@ -1,12 +1,8 @@
 import { useState, useRef, useEffect } from 'preact/hooks'
 import { Icon } from '../icons'
 
-const regionName = (code, lang) => {
-    try { return new Intl.DisplayNames([lang], { type: 'region' }).of(code) || code } catch { return code }
-}
-
-// The search box, then the countries as round buttons and the product types as chips, as on Allo Outings.
-export function SearchBar({ query, onSearch, onSaveHistory, searchHistory, countries, selectedCountry, onCountryChange, categories, categoryCounts, selectedCategory, onCategoryChange, t, lang }) {
+// The search box, then the product types as chips, as on Allo Outings. The country is set once in the header.
+export function SearchBar({ query, onSearch, onSaveHistory, searchHistory, categories, categoryCounts, selectedCategory, onCategoryChange, t, lang }) {
     const [isFocused, setIsFocused] = useState(false)
     const containerRef = useRef(null)
 
@@ -70,16 +66,6 @@ export function SearchBar({ query, onSearch, onSaveHistory, searchHistory, count
                     </ul>
                 )}
             </div>
-
-            {countries.length > 2 && (
-                <div class="when" role="group" aria-label={t.allCountries}>
-                    {countries.map(c => (
-                        <button key={c} type="button" aria-pressed={selectedCountry === c ? 'true' : 'false'} onClick={() => onCountryChange(c)}>
-                            {c === 'All' ? t.allCountries : regionName(c, lang)}
-                        </button>
-                    ))}
-                </div>
-            )}
 
             {categories.length > 1 && (
                 <div class="filters" role="group" aria-label={t.allCategories}>

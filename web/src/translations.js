@@ -1,5 +1,6 @@
 export const translations = {
     en: {
+        country: "Country",
         hero: "Recalled [baby and kids' products]",
         subtitle: "From official sources in Germany and the US, checked every day.",
         searchPlaceholder: "Product, brand or reason",
@@ -22,6 +23,7 @@ export const translations = {
         categories: {"food": "Food & formula", "feeding": "Feeding", "toys": "Toys", "sleep": "Sleep", "travel": "Car seats & strollers", "clothing": "Clothing", "furniture": "Furniture", "health": "Health & care", "other": "Other"}
     },
     de: {
+        country: "Land",
         hero: "Rückrufe für [Baby- und Kinderprodukte]",
         subtitle: "Aus amtlichen Quellen in Deutschland und den USA, jeden Tag geprüft.",
         searchPlaceholder: "Produkt, Marke oder Grund",
@@ -44,6 +46,7 @@ export const translations = {
         categories: {"food": "Lebensmittel & Säuglingsnahrung", "feeding": "Füttern", "toys": "Spielzeug", "sleep": "Schlafen", "travel": "Kindersitze & Kinderwagen", "clothing": "Kleidung", "furniture": "Möbel", "health": "Gesundheit & Pflege", "other": "Sonstiges"}
     },
     es: {
+        country: "País",
         hero: "Retiradas de [productos para bebés y niños]",
         subtitle: "De fuentes oficiales de Alemania y EE. UU., revisadas cada día.",
         searchPlaceholder: "Producto, marca o motivo",
@@ -66,6 +69,7 @@ export const translations = {
         categories: {"food": "Alimentos y fórmula", "feeding": "Alimentación", "toys": "Juguetes", "sleep": "Sueño", "travel": "Sillas de auto y cochecitos", "clothing": "Ropa", "furniture": "Muebles", "health": "Salud y cuidado", "other": "Otros"}
     },
     fr: {
+        country: "Pays",
         hero: "Rappels de [produits pour bébés et enfants]",
         subtitle: "Issus de sources officielles en Allemagne et aux États-Unis, vérifiés chaque jour.",
         searchPlaceholder: "Produit, marque ou motif",
@@ -88,6 +92,7 @@ export const translations = {
         categories: {"food": "Alimentation et lait infantile", "feeding": "Repas", "toys": "Jouets", "sleep": "Sommeil", "travel": "Sièges auto et poussettes", "clothing": "Vêtements", "furniture": "Meubles", "health": "Santé et soins", "other": "Autres"}
     },
     "zh-CN": {
+        country: "国家",
         hero: "[婴幼儿和儿童产品]召回",
         subtitle: "来自德国和美国的官方来源，每天更新。",
         searchPlaceholder: "产品、品牌或原因",

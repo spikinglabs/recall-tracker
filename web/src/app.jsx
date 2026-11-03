@@ -37,6 +37,11 @@ const Hero = ({ text }) => {
   const m = text.match(/^(.*)\[(.*)\](.*)$/)
   return <h1>{m ? <>{m[1]}<em>{m[2]}</em>{m[3]}</> : text}</h1>
 }
+// A flag from the country code, e.g. DE -> 🇩🇪.
+const flag = (code) => code.replace(/./g, c => String.fromCodePoint(0x1f1a5 + c.charCodeAt(0)))
+const regionName = (code, lang) => {
+  try { return new Intl.DisplayNames([lang], { type: 'region' }).of(code) || code } catch { return code }
+}
 const darkNow = () => {
   const set = document.documentElement.dataset.theme
   return set ? set === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
@@ -86,6 +91,7 @@ export function App() {
   }, [lang])
 
   const langMenu = useRef(null)
+  const countryMenu = useRef(null)
   const flipTheme = () => {
     const next = darkNow() ? 'light' : 'dark'
     document.documentElement.dataset.theme = next
@@ -180,6 +186,20 @@ export function App() {
               <span class="theme-moon"><Icon name="moon" /></span>
               <span class="theme-sun"><Icon name="sun" /></span>
             </button>
+            {uniqueCountries.length > 2 && (
+              <details class="lang" ref={countryMenu}>
+                <summary aria-label={t.country} title={t.country}>
+                  <span class="flag-emoji">{selectedCountry === 'All' ? '🌍' : flag(selectedCountry)}</span>
+                </summary>
+                <div class="lang-menu">
+                  {uniqueCountries.map(c => (
+                    <button key={c} type="button" aria-current={selectedCountry === c ? 'true' : 'false'} onClick={() => { setSelectedCountry(c); countryMenu.current.open = false }}>
+                      {c === 'All' ? `🌍 ${t.allCountries}` : `${flag(c)} ${regionName(c, lang)}`}
+                    </button>
+                  ))}
+                </div>
+              </details>
+            )}
             <details class="lang" ref={langMenu}>
               <summary aria-label={t.language} title={t.language}>
                 <Icon name="globe" />
@@ -202,9 +222,6 @@ export function App() {
             onSearch={handleSearch}
             onSaveHistory={handleSaveToHistory}
             searchHistory={searchHistory}
-            countries={uniqueCountries}
-            selectedCountry={selectedCountry}
-            onCountryChange={setSelectedCountry}
             categories={categories}
             categoryCounts={categoryCounts}
             selectedCategory={selectedCategory}
