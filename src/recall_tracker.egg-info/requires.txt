@@ -1,7 +1,0 @@
-beautifulsoup4>=4.14.3
-httpx>=0.28.1
-lxml>=6.0.2
-pydantic>=2.10.6
-pytest>=8.3.5
-deep-translator>=1.11.4
-anthropic>=0.72.0
