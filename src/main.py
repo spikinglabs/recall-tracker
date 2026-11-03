@@ -9,6 +9,7 @@ from src.classify import Classifier
 from src.scrapers.cpsc import CPSCScraper
 from src.scrapers.fda import FDAScraper
 from src.scrapers.germany import GermanyScraper
+from src.scrapers.safety_gate import SafetyGateScraper
 from src.translate import Translator, known_translations, load_previous
 
 
@@ -22,6 +23,7 @@ def main():
     now = datetime.now(timezone.utc)
     scrapers = [
         GermanyScraper(),
+        SafetyGateScraper(),
         FDAScraper(),
         CPSCScraper(),
     ]

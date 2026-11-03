@@ -56,10 +56,11 @@ export function rednoteText(recall, t) {
   const who = [companyName(recall.company), recall.country_sold_in && regionName(recall.country_sold_in, 'zh-CN')].filter(Boolean).join(' · ')
   const tags = ['德国带娃', '召回', '母婴好物避雷', '宝宝用品', '德国生活', '德国妈妈']
   if (recall.country_sold_in === 'US') tags.splice(4, 2, '美国带娃', '海淘')
+  if (recall.country_sold_in === 'EU') tags.splice(4, 0, '欧洲带娃')
   return [
     `⚠️ 召回：${title}`, who, reason, '',
     `信息来自官方通知（${recall.source}），家里有的话请停止使用，按通知处理。`,
-    `浏览器搜索「${SEARCH_ZH}」，在网站搜索框输入编号 ${shortId(recall.id)} 就能看到这条召回，还有更多德国和美国的婴幼儿产品召回。`,
+    `浏览器搜索「${SEARCH_ZH}」，在网站搜索框输入编号 ${shortId(recall.id)} 就能看到这条召回，还有更多德国、欧盟和美国的婴幼儿产品召回。`,
     '',
     tags.map(x => `#${x}`).join(' '),
   ].filter((l, i, a) => l !== '' || a[i - 1] !== '').join('\n')

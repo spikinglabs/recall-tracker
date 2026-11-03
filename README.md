@@ -1,5 +1,5 @@
 # recall-tracker
-Collects recalls of baby and children's products every day (US CPSC, US FDA, Lebensmittelwarnung.de) into one public
+Collects recalls of baby and children's products every day (US CPSC, US FDA, Lebensmittelwarnung.de, EU Safety Gate) into one public
 JSON file on Cloudflare R2, and shows them at https://recalls.allo.land/ (formerly tracker.babybaras.com, which
 redirects there). Allo Auri reads the same file.
 

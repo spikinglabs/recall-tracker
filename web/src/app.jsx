@@ -183,7 +183,10 @@ export function App() {
       compCmp.includes(query) ||
       reasonCmp.includes(query)
     )
-    const matchesCountry = selectedCountry === 'All' || recall.country_sold_in === selectedCountry
+    // EU Safety Gate alerts concern the whole single market, so they show with Germany too, and German ones with the EU.
+    const cc = recall.country_sold_in
+    const matchesCountry = selectedCountry === 'All' || cc === selectedCountry ||
+      (selectedCountry !== 'US' && cc !== 'US' && (cc === 'EU' || selectedCountry === 'EU'))
     return matchesSearch && matchesCountry
   })
   const categoryCounts = {}

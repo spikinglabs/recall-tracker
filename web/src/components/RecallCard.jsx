@@ -63,7 +63,10 @@ export function RecallCard({ recall, t, lang, onPoster, only }) {
     const country = recall.country_sold_in ? regionName(recall.country_sold_in, lang) : ''
     const places = recall.location_sold_in || []
     // Sold in all 16 German states: one word for the whole country.
-    const where = places.length && places.length < 16 ? places.join(', ') : ''
+    // EU alerts name the country whose authority found the product; it may be sold anywhere in Europe.
+    const where = recall.country_sold_in === 'EU'
+        ? (places.length ? t.reportedIn.replace('{country}', places.map(c => regionName(c, lang)).join(', ')) : '')
+        : places.length && places.length < 16 ? places.join(', ') : ''
     const dateText = isNaN(published) ? recall.publish_date : published.toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' })
 
     return (
