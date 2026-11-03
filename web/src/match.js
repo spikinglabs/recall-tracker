@@ -31,30 +31,98 @@ export function parseQuery(raw) {
   return { barcode: null, words: [...new Set(words)], text: text.trim() }
 }
 
+// The same kind of product in German, English, French and Spanish, so "Kinderwagen" finds a "pushchair" recall.
+const KINDS = `
+kinderwagen|buggy|pram|stroller|pushchair|poussette|carrito|cochecito
+babyschale|autositz|autokindersitz|kindersitz|car seat|carseat|siege auto|silla de coche|isofix
+hochstuhl|high chair|highchair|chaise haute|trona
+schnuller|pacifier|dummy|soother|tetine|chupete
+beissring|beißring|teether|teething|dentition|mordedor
+laufstall|playpen|play pen|parc bebe|parque
+reisebett|travel cot|travel bed|lit parapluie|cuna de viaje
+babybett|kinderbett|beistellbett|stubenwagen|crib|cot|bassinet|co-sleeper|cuna|berceau|lit bebe
+schlafsack|sleeping bag|sleepbag|sleep sack|gigoteuse|saco de dormir
+babywippe|wippe|bouncer|transat|hamaca
+babyschaukel|schaukel|swing|balancelle|columpio
+lauflernhilfe|lauflernwagen|walker|trotteur|andador
+helm|fahrradhelm|helmet|casque|casco
+spielzeug|toy|jouet|juguete
+puppe|doll|poupee|muneca
+kuscheltier|plüschtier|plush|soft toy|teddy|peluche
+trinklernbecher|sippy cup|tasse|vaso
+babyflasche|flasche|bottle|biberon
+babyfon|babyphone|baby monitor|ecoute bebe|vigilabebes
+treppenschutzgitter|türschutzgitter|schutzgitter|safety gate|stair gate|barriere|barrera
+fahrradsitz|bike seat|bicycle seat|child seat|siege velo
+babytrage|trage|carrier|baby carrier|porte bebe|mochila portabebe
+wickeltisch|wickelauflage|changing table|changing mat|table a langer|cambiador
+badesitz|bath seat|bath ring|siege de bain|asiento de bano
+anfangsnahrung|folgenahrung|milchnahrung|formula|lait infantile|leche de formula`
+  .trim().split('\n').map(line => line.split('|').map(w => norm(w)))
+const KIND_OF = new Map(KINDS.flatMap(group => group.map(w => [w, group])))
+
 const codesOf = (r) => [...(r.codes || []), ...(r.also || []).flatMap(a => a.codes || [])]
-const haystack = (r) => norm([
+const textOf = (r) => norm([
   r.title, r.en, r.title_i18n && Object.values(r.title_i18n).join(' '), r.company, codesOf(r).join(' '),
   ...(r.also || []).map(a => `${a.title} ${a.en || ''} ${a.company || ''}`),
   typeof r.reason === 'string' ? r.reason : r.reason && (r.reason.en || ''),
 ].filter(Boolean).join(' '))
 
+// Each recall's text, three ways: as written, without spaces and hyphens ("maxi-cosi" -> "maxicosi"), and as words.
+const prepared = new WeakMap()
+const prepare = (r) => {
+  let p = prepared.get(r)
+  if (!p) {
+    const text = textOf(r)
+    const words = text.split(/[^a-z0-9äöüß]+/).filter(Boolean)
+    p = { text, joined: words.join(''), spaced: ` ${words.join(' ')} `, words: words.filter(w => w.length >= 4) }
+    prepared.set(r, p)
+  }
+  return p
+}
+
+// One letter added, dropped or changed ("cybx" ~ "cybex").
+const oneOff = (a, b) => {
+  if (Math.abs(a.length - b.length) > 1) return false
+  let i = 0, j = 0, edits = 0
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) { i++; j++; continue }
+    if (++edits > 1) return false
+    if (a.length > b.length) i++
+    else if (a.length < b.length) j++
+    else { i++; j++ }
+  }
+  return edits + (a.length - i) + (b.length - j) <= 1
+}
+
+const has = (p, w, typos = true) => {
+  if (p.text.includes(w) || p.joined.includes(w)) return true
+  const kind = KIND_OF.get(w)
+  // Whole words only, so "cot" isn't found in "cotton"; a plural counts.
+  if (kind && kind.some(k => p.spaced.includes(` ${k} `) || p.spaced.includes(` ${k}s `))) return true
+  return typos && w.length >= 6 && !/\d/.test(w) && p.words.some(x => oneOff(w, x))
+}
+
 /** How well a recall matches: 0 = not at all. Up to three words must all be there (so "Maxi-Cosi Pebble" doesn't
- *  match another Maxi-Cosi product); a longer pasted title needs three in four of its words. */
-export function score(recall, q) {
+ *  match another Maxi-Cosi product); a longer pasted title needs three in four of its words. Spelling ("Maxicosi"),
+ *  one typo in a word of six letters or more (when no recall has the word as typed), and the kind of product in another language ("Kinderwagen" ~ "pushchair") count. */
+export function score(recall, q, exact = new Set()) {
   if (q.barcode) {
     return codesOf(recall).some(c => c.replace(/^0+/, '') === q.barcode) ? 100 : 0
   }
   if (!q.words.length) return 1
-  const hay = haystack(recall)
-  const hits = q.words.filter(w => hay.includes(w)).length
+  const p = prepare(recall)
+  const hits = q.words.filter(w => has(p, w, !exact.has(w))).length
   const need = q.words.length <= 3 ? q.words.length : Math.ceil(q.words.length * 0.75)
   return hits >= need ? hits : 0
 }
 
 /** Recalls that match, best first (date breaks ties). */
 export function search(recalls, q) {
+  // A word that some recall has as written is taken as written: "cybex" shouldn't also find "cyber".
+  const exact = new Set(q.words.filter(w => recalls.some(r => has(prepare(r), w, false))))
   return recalls
-    .map(r => [r, score(r, q)])
+    .map(r => [r, score(r, q, exact)])
     .filter(([, s]) => s > 0)
     .sort((a, b) => b[1] - a[1] || String(b[0].publish_date || b[0].date).localeCompare(String(a[0].publish_date || a[0].date)))
     .map(([r]) => r)
