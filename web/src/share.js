@@ -3,10 +3,14 @@ import { recallPath } from './paths.js'
 // Sharing a recall, as on Allo Outings: the phone's share sheet with a short text and the link, copying on
 // browsers without one, and a 3:4 poster drawn in the browser to share or save.
 
+// A few translations came back with their characters written as escapes ("\\u7a92\\u606f…"): as one long word,
+// that made the page wider than a phone and threw off the scanner and other windows.
+export const unescapeText = (s) => String(s).replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
+
 export const getLocal = (field, lang) => {
   if (!field) return ''
-  if (typeof field === 'string') return field
-  return field[lang] || field['en'] || Object.values(field)[0] || ''
+  if (typeof field === 'string') return unescapeText(field)
+  return unescapeText(field[lang] || field['en'] || Object.values(field)[0] || '')
 }
 
 export const regionName = (code, lang) => {
