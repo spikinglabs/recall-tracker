@@ -18,6 +18,9 @@ from pydantic import BaseModel, Field
 from src.models import RecallInfo
 
 MODEL = "claude-haiku-5-5"
+# Raise this when the rules for for_children change: recalls excluded under older rules are checked again, so a
+# wrong exclusion doesn't stay hidden. Recalls that were kept are not asked again.
+RULES = 2
 
 
 class Category(str, Enum):
@@ -53,11 +56,13 @@ class Verdict(BaseModel):
 SYSTEM = """You sort product recalls for a website that warns parents about recalls of baby and children's products.
 
 For each recall, decide:
-- for_children: true if the product is made for babies or children, or a child uses, eats, wears or plays with it
-  directly (toys, children's clothing, formula, baby food, cribs, car seats, children's medicine, sweets sold to
-  kids). False if it is an adult or household product and children only appear in the hazard, for example fuel
-  cans, paint thinner, adult medicines or cosmetics recalled for packaging that is not child-resistant, or
-  hospital equipment. When unsure, answer true.
+- for_children: true if a parent would buy or use the product for a baby or child. That includes products made
+  for children (toys, children's clothing and helmets, formula, baby food, cribs, car seats, children's medicine,
+  sweets sold to kids), baby care products (baby oil, baby lotion, baby wipes, diapers) and products parents buy to
+  keep children safe (safety gates, cabinet locks, outlet covers, baby monitors). False only if it is clearly an
+  adult, household or clinical product and children appear only in the hazard: fuel cans, paint thinner, adult
+  hair or beard products, adult medicines and supplements, essential oils, swimming pools, power strips, or
+  equipment and kits for hospitals and clinics (even for newborns). When unsure, answer true.
 - category: the kind of product.
 - title: the product name, translated. Keep brand names, model numbers and sizes as they are. Keep it short.
 - reason: the recall reason in one or two plain sentences, translated. Null if the recall gives no reason.
@@ -78,12 +83,18 @@ def describe(recall: RecallInfo) -> str:
     )
 
 
+def current(for_children, rules) -> bool:
+    """A verdict can be reused unless it excluded the recall under older rules."""
+    return for_children is True or (for_children is False and (rules or 0) >= RULES)
+
+
 def classified(recall: RecallInfo) -> bool:
-    return recall.category is not None and recall.for_children is not None
+    return recall.category is not None and current(recall.for_children, recall.rules)
 
 
 def apply(recall: RecallInfo, verdict: Verdict) -> None:
     recall.for_children = verdict.for_children
+    recall.rules = RULES
     recall.category = verdict.category.value
     recall.title_i18n = verdict.title.as_dict()
     if verdict.reason is not None:
@@ -92,9 +103,10 @@ def apply(recall: RecallInfo, verdict: Verdict) -> None:
 
 def copy_from(recall: RecallInfo, earlier: dict) -> bool:
     """Takes the verdict published for this recall on an earlier day. False if there was none."""
-    if earlier.get("category") is None or earlier.get("for_children") is None:
+    if earlier.get("category") is None or not current(earlier.get("for_children"), earlier.get("rules")):
         return False
     recall.for_children = earlier["for_children"]
+    recall.rules = earlier.get("rules")
     recall.category = earlier["category"]
     recall.title_i18n = earlier.get("title_i18n")
     if isinstance(earlier.get("reason"), dict):

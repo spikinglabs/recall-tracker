@@ -55,3 +55,19 @@ def test_stops_at_the_limit():
 def test_describe_reads_translated_reasons():
     r = recall("a", "Doll", reason={"en": "Choking", "de": "Erstickung"})
     assert "Reason: Choking" in describe(r)
+
+
+def test_exclusions_under_older_rules_are_checked_again():
+    asked = []
+    c = Classifier(ask=lambda t: asked.append(t) or fake(t))
+    gate = recall("gate", "Safety Gates")
+    gate.category, gate.for_children = "other", False  # excluded by the first rules, no `rules` recorded
+    kept = recall("kept", "Blocks")
+    kept.category, kept.for_children = "toys", True
+    fuel = recall("fuel", "Fuel Cans")
+    earlier = {"fuel": {"category": "other", "for_children": False, "rules": 2, "title_i18n": {"en": "Fuel Cans"}}}
+    c.run([gate, kept, fuel], earlier)
+    assert len(asked) == 1 and "Safety Gates" in asked[0]
+    assert gate.for_children is True and gate.rules == 2
+    assert fuel.for_children is False
+    assert c.stats["reused"] == 2
