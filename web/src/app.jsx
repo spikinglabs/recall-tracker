@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'preact/hooks'
 import { RecallList } from './components/RecallList'
 import { SearchBar } from './components/SearchBar'
+import { PosterSheet } from './components/PosterSheet'
+import { shortId } from './share'
 import { translations } from './translations'
 import { Icon } from './icons'
 import '@fontsource/atkinson-hyperlegible/400.css'
@@ -55,9 +57,18 @@ export function App() {
   const [searchQuery, setSearchQuery] = useState(() => {
     return localStorage.getItem('searchQuery') || ''
   })
+  // A shared link names one recall (?r=) and the sharer's language (?lang=), used when the reader hasn't chosen one.
+  const params = new URLSearchParams(location.search)
   const [lang, setLang] = useState(() => {
-    return localStorage.getItem('appLang') || 'en'
+    const shared = params.get('lang')
+    return localStorage.getItem('appLang') || (shared && translations[shared] ? shared : 'en')
   })
+  const [onlyId, setOnlyId] = useState(() => params.get('r'))
+  const [poster, setPoster] = useState(null)
+  const showAll = () => {
+    setOnlyId(null)
+    history.replaceState(null, '', location.pathname)
+  }
   const [selectedCountry, setSelectedCountry] = useState(() => {
     return localStorage.getItem('selectedCountry') || 'All'
   })
@@ -168,6 +179,14 @@ export function App() {
   for (const r of matching) categoryCounts[r.category] = (categoryCounts[r.category] || 0) + 1
   const activeCategory = categories.includes(selectedCategory) ? selectedCategory : 'All'
   const filteredRecalls = activeCategory === 'All' ? matching : matching.filter(r => r.category === activeCategory)
+  // The recall a shared link names, shown on its own; a link to a recall that has left the list shows them all.
+  const sharedRecall = onlyId ? recalls.find(r => shortId(r.id) === onlyId) : null
+  const shown = sharedRecall ? [sharedRecall] : filteredRecalls
+  // On a phone the shared recall would sit below the search; bring it into view once it's there.
+  const sharedId = sharedRecall?.id
+  useEffect(() => {
+    if (sharedId) document.querySelector('.section')?.scrollIntoView({ block: 'start' })
+  }, [sharedId])
 
   const t = translations[lang] || translations['en']
   const failedSources = (status?.sources || []).filter(s => !s.ok).map(s => s.name)
@@ -233,16 +252,19 @@ export function App() {
 
         <section class="section">
           {failedSources.length > 0 && <p class="alerts">{t.sourceFailed.replace('{sources}', failedSources.join(', '))}</p>}
+          {onlyId && !loading && !sharedRecall && <p class="alerts">{t.sharedGone}</p>}
           <div class="section-head">
-            <h2>{loading ? t.loading : t.count.replace('{n}', filteredRecalls.length.toLocaleString(lang))}</h2>
-            {updated && <p>{t.updated.replace('{date}', updated)}</p>}
+            <h2>{loading ? t.loading : sharedRecall ? t.sharedTitle : t.count.replace('{n}', filteredRecalls.length.toLocaleString(lang))}</h2>
+            {sharedRecall && <button type="button" class="link-btn" onClick={showAll}>{t.showAll.replace('{n}', recalls.length.toLocaleString(lang))}</button>}
+            {!sharedRecall && updated && <p>{t.updated.replace('{date}', updated)}</p>}
           </div>
           {error && <p class="empty">{t.error} {error}</p>}
           {!loading && !error && (
-            <RecallList recalls={filteredRecalls} t={t} lang={lang} />
+            <RecallList recalls={shown} t={t} lang={lang} onPoster={setPoster} only={!!sharedRecall} />
           )}
         </section>
       </div>
+      <PosterSheet recall={poster} t={t} lang={lang} onClose={() => setPoster(null)} />
     </>
   )
 }

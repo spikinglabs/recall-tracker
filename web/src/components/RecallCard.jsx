@@ -1,13 +1,7 @@
 // One recall, laid out like an Allo Outings card: the gold date sign, the title, then what and where.
-const regionName = (code, lang) => {
-    try { return new Intl.DisplayNames([lang], { type: 'region' }).of(code) || code } catch { return code }
-}
-
-const getLocal = (field, lang) => {
-    if (!field) return ''
-    if (typeof field === 'string') return field
-    return field[lang] || field['en'] || Object.values(field)[0] || ''
-}
+import { useState } from 'preact/hooks'
+import { Icon } from '../icons'
+import { companyName, copy, getLocal, recallLink, recallText, regionName, shareText } from '../share'
 
 // A recall published in the last two weeks that the tracker found in the last week. (Every recall has a
 // first_seen of 1 Nov 2026 or later, when the archive started, so first_seen alone would mark them all new.)
@@ -26,7 +20,36 @@ function Stamp({ date, lang }) {
     )
 }
 
-export function RecallCard({ recall, t, lang }) {
+// Share (text and link through the phone's share sheet, copied where there is none), copy the link, and the
+// poster. The button says what happened for a moment, as on Allo Outings.
+function ShareRow({ recall, t, lang, onPoster }) {
+    const [done, setDone] = useState(null)
+    const flash = (key) => { setDone(key); setTimeout(() => setDone(null), 2500) }
+    const link = () => recallLink(recall, lang)
+    const share = async () => {
+        const r = await shareText({ title: t.recallTag, text: recallText(recall, t, lang), url: link() })
+        if (r === 'copied') flash('share')
+        else if (r === 'failed') prompt(t.copyLink, link())
+    }
+    const copyLink = async () => {
+        if ((await copy(link())) === 'copied') flash('link'); else prompt(t.copyLink, link())
+    }
+    return (
+        <div class="share-row">
+            <button type="button" class="btn icon" title={t.share} onClick={share}>
+                <Icon name="share" /><span class={done === 'share' ? '' : 'sr-only'}>{done === 'share' ? t.shareCopied : t.share}</span>
+            </button>
+            <button type="button" class="btn icon" title={t.copyLink} onClick={copyLink}>
+                <Icon name="link" /><span class={done === 'link' ? '' : 'sr-only'}>{done === 'link' ? t.linkCopied : t.copyLink}</span>
+            </button>
+            <button type="button" class="btn icon" title={t.poster} onClick={() => onPoster(recall)}>
+                <Icon name="image" /><span class="sr-only">{t.poster}</span>
+            </button>
+        </div>
+    )
+}
+
+export function RecallCard({ recall, t, lang, onPoster, only }) {
     const reason = getLocal(recall.reason, lang)
     const note = getLocal(recall.annotation, lang)
     const title = getLocal(recall.title_i18n, lang) || recall.title
@@ -44,12 +67,12 @@ export function RecallCard({ recall, t, lang }) {
     const dateText = isNaN(published) ? recall.publish_date : published.toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' })
 
     return (
-        <article class="item">
+        <article class={only ? "item only" : "item"}>
             <Stamp date={recall.publish_date} lang={lang} />
             <div class="item-body">
                 <h3><a href={recall.url} target="_blank" rel="noopener noreferrer">{title}</a></h3>
                 {original && <p class="orig" lang={recall.country_sold_in === 'DE' ? 'de' : 'en'}>{original}</p>}
-                <div class="meta">{[recall.company, country].filter(Boolean).join(' · ')}</div>
+                <div class="meta">{[companyName(recall.company), country].filter(Boolean).join(' · ')}</div>
                 {reason && <p class="reason">{reason}</p>}
                 {note && <p class="note">{note}</p>}
                 <div class="pills">
@@ -58,6 +81,7 @@ export function RecallCard({ recall, t, lang }) {
                     {where && <span class="pill where">📍 {where}</span>}
                 </div>
                 <div class="trust"><b>{t.officialNotice} ↗</b> · {recall.source} · <time datetime={recall.publish_date}>{dateText}</time></div>
+                <ShareRow recall={recall} t={t} lang={lang} onPoster={onPoster} />
             </div>
         </article>
     )

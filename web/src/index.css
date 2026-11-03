@@ -108,3 +108,28 @@ h1, h2, h3, .meta, .orig { overflow-wrap: anywhere; }
   .stamp .d { font-size: 1.5rem; }
   .item { gap: 10px; }
 }
+
+/* sharing, as on Allo Outings: icon buttons, the word shows for a moment after a copy */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 12px; padding: 11px 16px; font-weight: 700; cursor: pointer; border: 1.5px solid var(--ink); background: transparent; text-decoration: none; color: var(--ink); }
+.btn.primary { background: var(--ink); color: var(--paper); }
+.btn svg { width: 18px; height: 18px; flex: none; }
+.share-row { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.share-row .btn.icon { min-width: 40px; min-height: 40px; padding: 0 11px; border: 1px solid var(--line); background: var(--card); color: var(--ink-soft); font-size: .85rem; }
+.share-row .btn.icon:hover { border-color: var(--ink); color: var(--ink); }
+.item.only { border-color: var(--rot); box-shadow: 0 0 0 3px color-mix(in srgb, var(--rot) 25%, transparent), var(--shadow); }
+.link-btn { border: 0; background: none; padding: 0; color: var(--blau); font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.small { font-size: .85rem; color: var(--ink-soft); margin: 0; }
+.sheet { border: 0; border-radius: 18px; padding: 18px; width: min(420px, calc(100% - 32px)); background: var(--paper); color: var(--ink); }
+.sheet::backdrop { background: rgb(0 0 0 / .35); }
+.sheet h3 { margin: 0; font-size: 1.2rem; }
+.pic-sheet { display: none; gap: 12px; max-height: calc(100dvh - 32px); overflow-y: auto; }
+.pic-sheet[open] { display: grid; }
+.pic-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pic-head .btn { padding: 6px 12px; border: 0; font-size: 1.1rem; }
+.pic-sheet img, .pic-wait { width: 100%; max-width: 300px; height: auto; justify-self: center; border-radius: 10px; border: 1px solid var(--line); background: var(--card); aspect-ratio: 3 / 4; }
+.pic-wait { display: grid; place-items: center; }
+.pic-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.spinner { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--ink); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
