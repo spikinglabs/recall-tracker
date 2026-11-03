@@ -78,7 +78,7 @@ export function RecallCard({ recall, t, lang, onPoster, only }) {
                 <div class="pills">
                     {isNew && <span class="pill new">{t.newPill}</span>}
                     {recall.category && t.categories[recall.category] && <span class="pill">{t.categories[recall.category]}</span>}
-                    {where && <span class="pill where">📍 {where}</span>}
+                    {where && <span class="pill where"><span aria-hidden="true">📍</span><span>{where}</span></span>}
                 </div>
                 <div class="trust"><b>{t.officialNotice} ↗</b> · {recall.source} · <time datetime={recall.publish_date}>{dateText}</time></div>
                 <ShareRow recall={recall} t={t} lang={lang} onPoster={onPoster} />
