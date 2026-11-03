@@ -72,6 +72,29 @@ jobs:
               --endpoint-url https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
           done
 
+      # The same files in the bucket behind https://recalls-api.allo.land (Cloudflare account that holds allo.land).
+      # Skipped until the R2_ALLO_* settings exist. The step above keeps the old r2.dev bucket current for readers
+      # that haven't moved yet.
+      - name: Upload to the allo.land R2 bucket
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ALLO_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_ALLO_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          BUCKET: ${{ vars.R2_ALLO_BUCKET_NAME || 'recall-tracker-data' }}
+          # The account ID may be saved as a variable or as a secret.
+          ACCOUNT_ID: ${{ vars.R2_ALLO_ACCOUNT_ID || secrets.R2_ALLO_ACCOUNT_ID }}
+        run: |
+          if [ -z "$ACCOUNT_ID" ] || [ -z "$AWS_ACCESS_KEY_ID" ]; then
+            echo "::warning::R2_ALLO_ACCOUNT_ID or R2_ALLO_ACCESS_KEY_ID is not set; skipping the allo.land bucket."
+            exit 0
+          fi
+          ENDPOINT="https://$ACCOUNT_ID.r2.cloudflarestorage.com"
+          SCRAPED_DATE=$(date -u +"%Y-%m-%d")
+          aws s3 cp data/processed.json "s3://$BUCKET/baby/scraped_date=$SCRAPED_DATE/processed.json" --endpoint-url "$ENDPOINT"
+          for f in processed.json excluded.json status.json; do
+            aws s3 cp "data/$f" "s3://$BUCKET/baby/scraped_date=latest/$f" --endpoint-url "$ENDPOINT"
+          done
+
       # GitHub switches off scheduled workflows after 60 days without commits (this happened in June 2026).
       # Re-enabling it on every run resets that timer, so the daily scrape keeps going.
       - name: Keep the daily schedule switched on
