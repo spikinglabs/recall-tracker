@@ -1,7 +1,12 @@
-import { useState, useEffect } from 'preact/hooks'
+import { useState, useEffect, useRef } from 'preact/hooks'
 import { RecallList } from './components/RecallList'
 import { SearchBar } from './components/SearchBar'
 import { translations } from './translations'
+import { Icon } from './icons'
+import '@fontsource/atkinson-hyperlegible/400.css'
+import '@fontsource/atkinson-hyperlegible/700.css'
+import '@fontsource/barlow-semi-condensed/700.css'
+import '@fontsource-variable/bricolage-grotesque/opsz.css'
 import './index.css'
 
 // The data's address, then the old r2.dev bucket in case the new one can't be reached.
@@ -21,6 +26,20 @@ const fetchJson = async (name) => {
     }
   }
   throw lastError
+}
+const LANGS = [['en', 'English'], ['de', 'Deutsch'], ['es', 'Español'], ['fr', 'Français'], ['zh-CN', '中文']]
+const store = {
+  get: (k) => { try { return localStorage.getItem(k) } catch { return null } },
+  set: (k, v) => { try { localStorage.setItem(k, v) } catch {} },
+}
+// "Recalled [baby and kids' products]": the bracketed words get the gold marker, as on Allo Outings.
+const Hero = ({ text }) => {
+  const m = text.match(/^(.*)\[(.*)\](.*)$/)
+  return <h1>{m ? <>{m[1]}<em>{m[2]}</em>{m[3]}</> : text}</h1>
+}
+const darkNow = () => {
+  const set = document.documentElement.dataset.theme
+  return set ? set === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
 }
 const CATEGORIES = ['food', 'feeding', 'toys', 'sleep', 'travel', 'clothing', 'furniture', 'health', 'other']
 
@@ -62,7 +81,17 @@ export function App() {
 
   useEffect(() => {
     localStorage.setItem('appLang', lang)
+    document.documentElement.lang = lang === 'zh-CN' ? 'zh-Hans' : lang
+    document.title = (translations[lang] || translations.en).title
   }, [lang])
+
+  const langMenu = useRef(null)
+  const flipTheme = () => {
+    const next = darkNow() ? 'light' : 'dark'
+    document.documentElement.dataset.theme = next
+    store.set('rt-theme', next)
+    document.querySelectorAll('meta[name="theme-color"]').forEach(m => { m.content = next === 'dark' ? '#121314' : '#ffcc00' })
+  }
 
   useEffect(() => {
     localStorage.setItem('searchQuery', searchQuery)
@@ -107,7 +136,7 @@ export function App() {
   const presentCategories = new Set(recalls.map(r => r.category).filter(Boolean))
   const categories = ['All', ...CATEGORIES.filter(c => presentCategories.has(c))]
 
-  const filteredRecalls = recalls.filter(recall => {
+  const matching = recalls.filter(recall => {
     const query = searchQuery.toLowerCase()
 
     // Safely get the localized reason or annotation if it's a dict, or fallback to original string
@@ -127,61 +156,76 @@ export function App() {
       reasonCmp.includes(query)
     )
     const matchesCountry = selectedCountry === 'All' || recall.country_sold_in === selectedCountry
-    const matchesCategory = selectedCategory === 'All' || categories.length < 2 || recall.category === selectedCategory
-
-    return matchesSearch && matchesCountry && matchesCategory
+    return matchesSearch && matchesCountry
   })
+  const categoryCounts = {}
+  for (const r of matching) categoryCounts[r.category] = (categoryCounts[r.category] || 0) + 1
+  const activeCategory = categories.includes(selectedCategory) ? selectedCategory : 'All'
+  const filteredRecalls = activeCategory === 'All' ? matching : matching.filter(r => r.category === activeCategory)
 
   const t = translations[lang] || translations['en']
   const failedSources = (status?.sources || []).filter(s => !s.ok).map(s => s.name)
   const updated = status?.updated && new Date(status.updated).toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' })
   return (
-    <main>
-      <header class="app-header">
-        <div>
-          <h1>{t.title}</h1>
-          <p class="subtitle">{t.subtitle}</p>
-        </div>
-        <select
-          class="lang-select"
-          value={lang}
-          onChange={(e) => setLang(e.target.value)}
-        >
-          <option value="en">English (EN)</option>
-          <option value="de">Deutsch (DE)</option>
-          <option value="es">Español (ES)</option>
-          <option value="fr">Français (FR)</option>
-          <option value="zh-CN">中文 (ZH)</option>
-        </select>
-      </header>
+    <>
+      <div class="flag" />
+      <div class="app">
+        <header class="top">
+          <a class="brand" href="/">
+            <span class="brand-mark"><Icon name="brand" /></span>
+            <span>{t.title}</span>
+          </a>
+          <div class="top-right">
+            <button type="button" class="theme-flip" aria-label={t.themeFlip} title={t.themeFlip} onClick={flipTheme}>
+              <span class="theme-moon"><Icon name="moon" /></span>
+              <span class="theme-sun"><Icon name="sun" /></span>
+            </button>
+            <details class="lang" ref={langMenu}>
+              <summary aria-label={t.language} title={t.language}>
+                <Icon name="globe" />
+                <span>{lang === 'zh-CN' ? '中' : lang.toUpperCase()}</span>
+              </summary>
+              <div class="lang-menu">
+                {LANGS.map(([code, name]) => (
+                  <button key={code} type="button" aria-current={lang === code ? 'true' : 'false'} onClick={() => { setLang(code); langMenu.current.open = false }}>{name}</button>
+                ))}
+              </div>
+            </details>
+          </div>
+        </header>
 
-      <SearchBar
-        query={searchQuery}
-        onSearch={handleSearch}
-        onSaveHistory={handleSaveToHistory}
-        searchHistory={searchHistory}
-        countries={uniqueCountries}
-        selectedCountry={selectedCountry}
-        onCountryChange={setSelectedCountry}
-        categories={categories}
-        selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
-        t={t}
-      />
+        <section class="ask">
+          <Hero text={t.hero} />
+          <p class="sub">{t.subtitle}</p>
+          <SearchBar
+            query={searchQuery}
+            onSearch={handleSearch}
+            onSaveHistory={handleSaveToHistory}
+            searchHistory={searchHistory}
+            countries={uniqueCountries}
+            selectedCountry={selectedCountry}
+            onCountryChange={setSelectedCountry}
+            categories={categories}
+            categoryCounts={categoryCounts}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            t={t}
+            lang={lang}
+          />
+        </section>
 
-      {status && (
-        <p class="list-status">
-          {updated && t.updated.replace('{date}', updated)}
-          {failedSources.length > 0 && <span class="list-warning"> {t.sourceFailed.replace('{sources}', failedSources.join(', '))}</span>}
-        </p>
-      )}
-
-      {loading && <p>{t.loading}</p>}
-      {error && <p>{t.error} {error}</p>}
-
-      {!loading && !error && (
-        <RecallList recalls={filteredRecalls} t={t} lang={lang} />
-      )}
-    </main>
+        <section class="section">
+          {failedSources.length > 0 && <p class="alerts">{t.sourceFailed.replace('{sources}', failedSources.join(', '))}</p>}
+          <div class="section-head">
+            <h2>{loading ? t.loading : t.count.replace('{n}', filteredRecalls.length.toLocaleString(lang))}</h2>
+            {updated && <p>{t.updated.replace('{date}', updated)}</p>}
+          </div>
+          {error && <p class="empty">{t.error} {error}</p>}
+          {!loading && !error && (
+            <RecallList recalls={filteredRecalls} t={t} lang={lang} />
+          )}
+        </section>
+      </div>
+    </>
   )
 }
