@@ -1,3 +1,5 @@
+import { recallPath } from './paths.js'
+
 // Sharing a recall, as on Allo Outings: the phone's share sheet with a short text and the link, copying on
 // browsers without one, and a 3:4 poster drawn in the browser to share or save.
 
@@ -58,10 +60,7 @@ export function rednoteText(recall, t) {
 
 /** The address that opens the site on this one recall, in the sharer's language unless the reader chose one. */
 export function recallLink(recall, lang) {
-  const u = new URL(location.origin + location.pathname)
-  u.searchParams.set('r', shortId(recall.id))
-  u.searchParams.set('lang', lang)
-  return u.toString()
+  return location.origin + recallPath(lang, shortId(recall.id))
 }
 
 /** The text that goes with the link: what, who, why, and where it comes from. */
