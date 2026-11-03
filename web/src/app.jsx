@@ -4,7 +4,7 @@ import { SearchBar } from './components/SearchBar'
 import { translations } from './translations'
 import './index.css'
 
-const DATA_URL = 'https://pub-f36c3831e82845e4af2d54940ea6c32d.r2.dev/baby/scraped_date%3Dlatest/processed.json'
+const DATA_URL = 'https://recalls-api.allo.land/baby/scraped_date%3Dlatest/processed.json'
 const STATUS_URL = DATA_URL.replace('processed.json', 'status.json')
 const CATEGORIES = ['food', 'feeding', 'toys', 'sleep', 'travel', 'clothing', 'furniture', 'health', 'other']
 

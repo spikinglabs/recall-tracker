@@ -14,7 +14,7 @@ import httpx
 from deep_translator import GoogleTranslator
 
 LANGS = ["en", "de", "es", "fr", "zh-CN"]
-PREVIOUS_URL = "https://pub-f36c3831e82845e4af2d54940ea6c32d.r2.dev/baby/scraped_date%3Dlatest/processed.json"
+PREVIOUS_URL = "https://recalls-api.allo.land/baby/scraped_date%3Dlatest/processed.json"
 
 
 def clean(text: str) -> str:
