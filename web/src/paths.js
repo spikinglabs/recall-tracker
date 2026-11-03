@@ -7,9 +7,10 @@ const DIR_LANG = Object.fromEntries(Object.entries(LANG_DIR).filter(([, d]) => d
 
 export const homePath = (lang) => (LANG_DIR[lang] ? `/${LANG_DIR[lang]}/` : '/')
 export const recallPath = (lang, code) => `${homePath(lang)}r/${code}/`
+export const statsPath = (lang) => `${homePath(lang)}stats/`
 
 /** The language a path names (null at the root, where the reader's choice applies) and the recall code in it. */
 export function parsePath(pathname) {
-  const m = pathname.match(/^\/(?:(de|es|fr|zh)(?:\/|$))?(?:r\/([2-9A-HJKMNP-Z]{6})\/?)?/i)
-  return { lang: m?.[1] ? DIR_LANG[m[1].toLowerCase()] : null, code: m?.[2] ? m[2].toUpperCase() : null }
+  const m = pathname.match(/^\/(?:(de|es|fr|zh)(?:\/|$))?(?:r\/([2-9A-HJKMNP-Z]{6})\/?|(stats)\/?)?/i)
+  return { lang: m?.[1] ? DIR_LANG[m[1].toLowerCase()] : null, code: m?.[2] ? m[2].toUpperCase() : null, stats: !!m?.[3] }
 }

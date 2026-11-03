@@ -6,7 +6,7 @@ import { regionName } from '../share'
 // src/history.py), loaded the first time someone searches. Titles stay in their original language.
 const URL = 'https://recalls-api.allo.land/baby/scraped_date%3Dlatest/history.json'
 let cache = null
-const load = () => (cache ||= fetch(URL).then(r => (r.ok ? r.json() : Promise.reject(new Error(r.status)))).catch(e => { cache = null; throw e }))
+export const loadHistory = () => (cache ||= fetch(URL).then(r => (r.ok ? r.json() : Promise.reject(new Error(r.status)))).catch(e => { cache = null; throw e }))
 
 export function History({ query, text, skip, t, lang, foundRecent }) {
     const [data, setData] = useState(null)
@@ -14,7 +14,7 @@ export function History({ query, text, skip, t, lang, foundRecent }) {
     const active = text.trim().length >= 3
     useEffect(() => {
         if (!active || data) return
-        load().then(setData).catch(() => setFailed(true))
+        loadHistory().then(setData).catch(() => setFailed(true))
     }, [active])
     if (!active) return null
 

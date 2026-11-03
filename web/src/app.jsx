@@ -6,7 +6,8 @@ import { shortId, typedCode } from './share'
 import { parseQuery, search } from './match.js'
 import { History } from './components/History'
 import { Scanner } from './components/Scanner'
-import { homePath, parsePath, recallPath } from './paths.js'
+import { Stats } from './components/Stats'
+import { homePath, parsePath, recallPath, statsPath } from './paths.js'
 import { translations } from './translations'
 import { Icon } from './icons'
 import '@fontsource/atkinson-hyperlegible/400.css'
@@ -75,10 +76,11 @@ export function App() {
     return localStorage.getItem('appLang') || (shared && translations[shared] ? shared : 'en')
   })
   const [onlyId, setOnlyId] = useState(() => fromPath.code || params.get('r'))
+  const onStats = fromPath.stats
   // Choosing a language moves to that language's address, so the address always matches the page.
   const setLang = (l) => {
     setLangState(l)
-    history.replaceState(null, '', onlyId ? recallPath(l, onlyId.toUpperCase()) : homePath(l))
+    history.replaceState(null, '', onStats ? statsPath(l) : onlyId ? recallPath(l, onlyId.toUpperCase()) : homePath(l))
   }
   const [poster, setPoster] = useState(null)
   const [scanning, setScanning] = useState(false)
@@ -116,7 +118,8 @@ export function App() {
   useEffect(() => {
     localStorage.setItem('appLang', lang)
     document.documentElement.lang = lang === 'zh-CN' ? 'zh-Hans' : lang
-    document.title = (translations[lang] || translations.en).title
+    const tl = translations[lang] || translations.en
+    document.title = onStats ? `${tl.statsTitle} · ${tl.title}` : tl.title
   }, [lang])
 
   const langMenu = useRef(null)
@@ -207,7 +210,7 @@ export function App() {
       <div class="flag" />
       <div class="app">
         <header class="top">
-          <a class="brand" href="/">
+          <a class="brand" href={homePath(lang)}>
             <span class="brand-mark"><Icon name="brand" /></span>
             <span>{t.title}</span>
           </a>
@@ -244,6 +247,7 @@ export function App() {
           </div>
         </header>
 
+        {onStats ? <Stats recalls={recalls} loading={loading} t={t} lang={lang} /> : (<>
         <section class="ask">
           <Hero text={t.hero} />
           <p class="sub">{t.subtitle}</p>
@@ -268,7 +272,7 @@ export function App() {
           <div class="section-head">
             <h2>{loading ? t.loading : sharedRecall ? t.sharedTitle : (filteredRecalls.length === 1 && t.countOne ? t.countOne : t.count.replace('{n}', filteredRecalls.length.toLocaleString(lang)))}</h2>
             {sharedRecall && <button type="button" class="link-btn" onClick={showAll}>{t.showAll.replace('{n}', recalls.length.toLocaleString(lang))}</button>}
-            {!sharedRecall && updated && <p>{t.updated.replace('{date}', updated)}</p>}
+            {!sharedRecall && updated && <p>{t.updated.replace('{date}', updated)} <a href={statsPath(lang)}>{t.statsLink} →</a></p>}
           </div>
           {error && <p class="empty">{t.error} {error}</p>}
           {!loading && !error && (
@@ -278,6 +282,7 @@ export function App() {
         {!loading && !sharedRecall && (
           <History query={query} text={searchQuery} skip={knownIds} foundRecent={filteredRecalls.length > 0} t={t} lang={lang} />
         )}
+        </>)}
       </div>
       <PosterSheet recall={poster} t={t} lang={lang} onClose={() => setPoster(null)} />
       <Scanner open={scanning} t={t} onClose={() => setScanning(false)} onCode={(code) => { setScanning(false); setSearchQuery(code); handleSaveToHistory(code) }} />

@@ -9,7 +9,8 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { translations } from '../src/translations.js'
 import { companyName, getLocal, regionName, shortId } from '../src/share.js'
-import { LANG_DIR, SITE, homePath, recallPath } from '../src/paths.js'
+import { LANG_DIR, SITE, homePath, recallPath, statsPath } from '../src/paths.js'
+import { computeStats, REGIONS } from '../src/stats.js'
 
 const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist')
 const DATA = [
@@ -81,6 +82,7 @@ const template = await readFile(join(DIST, 'index.html'), 'utf8')
 const recalls = ((await fetchJson('processed.json')) || [])
   .sort((a, b) => String(b.publish_date).localeCompare(String(a.publish_date)))
 const status = await fetchJson('status.json')
+const stats = computeStats(recalls, await fetchJson('history.json'))
 const lastmod = (status?.updated || new Date().toISOString()).slice(0, 10)
 const urls = []
 
@@ -110,6 +112,28 @@ for (const lang of LANGS) {
     },
   }))
   urls.push([path, lastmod, LANGS.map((l) => [l, homePath(l)])])
+
+  // The statistics page, as plain lists (the app draws the charts).
+  {
+    const p = statsPath(lang)
+    const list = (rows, label) => `<ul>${rows.map(([k, n]) => `<li>${esc(label(k))}: ${n}</li>`).join('')}</ul>`
+    const regions = REGIONS.map(r => `${t.statsRegions[r]} ${stats.regions[r] || 0}`).join(', ')
+    const body = `<main class="app"><p><a href="${path}">${esc(t.title)}</a></p><section class="ask"><h1>${esc(t.statsTitle)}</h1><p class="sub">${esc(t.statsIntro)}</p></section>` +
+      `<p><b>${stats.total}</b> ${esc(t.statsTotal)} (${esc(regions)})</p>` +
+      `<h2>${esc(t.statsPerMonth)}</h2>${list(stats.months, (m) => m)}` +
+      `<h2>${esc(t.statsHazards)}</h2>${list(stats.hazards, (k) => t.hazards[k] || k)}` +
+      (stats.categories.length ? `<h2>${esc(t.statsKinds)}</h2>${list(stats.categories, (k) => t.categories[k] || k)}` : '') +
+      (stats.reporters.length ? `<h2>${esc(t.statsReporters)}</h2>${list(stats.reporters, (k) => regionName(k, lang))}` : '') +
+      `</main>`
+    await write(p, page(template, {
+      lang, path: p, body,
+      title: `${t.statsTitle} · ${t.title}`,
+      description: cut(`${stats.total} ${t.statsTotal} (${regions}). ${t.statsIntro}`, 160),
+      alternates: LANGS.map((l) => [l, statsPath(l)]),
+      jsonld: { '@context': 'https://schema.org', '@type': 'WebPage', name: t.statsTitle, url: SITE + p, inLanguage: HREFLANG[lang], description: t.statsIntro },
+    }))
+    urls.push([p, lastmod, LANGS.map((l) => [l, statsPath(l)])])
+  }
 
   for (const r of recalls) {
     const code = shortId(r.id)
