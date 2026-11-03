@@ -23,8 +23,6 @@ def merge(today: List[RecallInfo], previous: Iterable[dict], now: datetime, keep
         seen = before.get("first_seen") or before.get("scraped_datetime")
         r.first_seen = datetime.fromisoformat(seen.replace("Z", "+00:00")) if isinstance(seen, str) else now
         r.last_seen = now
-        # Answers from the duplicate check for retailer recalls (src/duplicates.py), so each pair is asked once.
-        r.checked_with = r.checked_with or before.get("checked_with")
         merged[r.id] = r
     cutoff = now - timedelta(days=keep_days)
     kept = 0

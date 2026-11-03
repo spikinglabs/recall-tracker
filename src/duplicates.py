@@ -5,18 +5,18 @@ The same unsafe product turns up more than once: the UK writes one report per ma
 and the Safety Gate often repeats a UK report. This step runs after all sources are collected and classified, so
 it can compare the English titles Claude wrote for each one.
 
-The recall kept is an official one when there is one, then the one from the most specific source (Lebensmittelwarnung.de names the German states; the EU
+The recall kept is the one from the most specific source (Lebensmittelwarnung.de names the German states; the EU
 alert covers Europe), then the earliest. The others go into its `also` list whole, so their links can be shown
 with it, their codes still find it, and the next run reloads them from there.
 """
 import re
 from datetime import timedelta
-from typing import Callable, Dict, List, Optional, Set
+from typing import Dict, List, Set
 
 from src.models import RecallInfo
 
 # Most specific first.
-SOURCE_ORDER = ["Lebensmittelwarnung.de", "EU Safety Gate", "UK OPSS", "CPSC", "FDA", "Produktwarnung.eu"]  # official first
+SOURCE_ORDER = ["Lebensmittelwarnung.de", "EU Safety Gate", "UK OPSS", "CPSC", "FDA"]
 WINDOW = timedelta(days=180)
 
 # Words that say what kind of report or product it is, not which product.
@@ -73,28 +73,8 @@ def rank(recall: RecallInfo):
     return (order, recall.publish_datetime, recall.id)
 
 
-# Retailer recalls (not official) are worded freely ("BEBA baby food recalled again by Kaufland"), so the title rules
-# miss many of them. Pairs that look close enough are put to Claude, once; the answer is kept on the retailer recall.
-LOOSE_WINDOW = timedelta(days=45)
-NEAR = {"DE": {"DE", "EU"}, "EU": {"DE", "EU"}}
-
-
-def loose_candidate(a: RecallInfo, b: RecallInfo) -> bool:
-    if (a.official is False) == (b.official is False):
-        return False
-    retail, other = (a, b) if a.official is False else (b, a)
-    if other.country_sold_in not in NEAR.get(retail.country_sold_in, {retail.country_sold_in}):
-        return False
-    if abs(a.publish_datetime - b.publish_datetime) > LOOSE_WINDOW:
-        return False
-    words = lambda r: {w for w in tokens(english_title(r)) | tokens(r.title) | set(company_key(r).split()) if len(w) >= 4}
-    return bool(words(a) & words(b))
-
-
-def fold(recalls: List[RecallInfo], confirm: Optional[Callable[[RecallInfo, RecallInfo], bool]] = None,
-         max_checks: int = 100) -> List[RecallInfo]:
-    """Returns one recall per product, each with the others in `also` (sorted by date). With `confirm`, retailer
-    recalls that the title rules don't match are checked against close official ones."""
+def fold(recalls: List[RecallInfo]) -> List[RecallInfo]:
+    """Returns one recall per product, each with the others in `also` (sorted by date)."""
     flat: Dict[str, RecallInfo] = {}
     for r in recalls:
         # Duplicates folded on an earlier run come back inside `also`; compare them afresh.
@@ -117,26 +97,6 @@ def fold(recalls: List[RecallInfo], confirm: Optional[Callable[[RecallInfo, Reca
         for b in items[i + 1:]:
             if root(a.id) != root(b.id) and same_product(a, b, toks[a.id], toks[b.id]):
                 parent[root(b.id)] = root(a.id)
-
-    if confirm:
-        checks = 0
-        for retail in [r for r in items if r.official is False]:
-            known = retail.checked_with or {}
-            for other in items:
-                if root(other.id) == root(retail.id) or not loose_candidate(retail, other):
-                    continue
-                if other.id not in known:
-                    if checks >= max_checks:
-                        continue
-                    checks += 1
-                    try:
-                        known[other.id] = bool(confirm(retail, other))
-                    except Exception as e:  # tried again next run
-                        print(f"Could not compare {retail.id} with {other.id}: {e!r}", flush=True)
-                        continue
-                if known[other.id]:
-                    parent[root(retail.id)] = root(other.id)
-            retail.checked_with = known or None
 
     groups: Dict[str, List[RecallInfo]] = {}
     for r in items:

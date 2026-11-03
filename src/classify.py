@@ -114,16 +114,6 @@ def copy_from(recall: RecallInfo, earlier: dict) -> bool:
     return True
 
 
-class Same(BaseModel):
-    same: bool = Field(description="True if both notices are about the same recall of the same product")
-
-
-SAME_SYSTEM = """You compare two product recall notices. Answer same=true only if both are about the same recall of
-the same product (same brand or product line and the same problem), for example a retailer's notice and the
-authority's notice of one recall. Different models, sizes or batches recalled separately, or different products
-with the same problem, are not the same."""
-
-
 class Classifier:
     def __init__(self, ask: Optional[Callable[[str], Verdict]] = None, budget_s: float = 20 * 60, limit: int = 600):
         self.ask = ask or self._ask_claude
@@ -151,23 +141,6 @@ class Classifier:
         if response.parsed_output is None:
             raise ValueError(f"no verdict (stop reason: {response.stop_reason})")
         return response.parsed_output
-
-    def same(self, a: RecallInfo, b: RecallInfo) -> bool:
-        """Whether two notices are one recall (used by src/duplicates.py for retailer recalls)."""
-        if self._client is None:
-            import anthropic
-            self._client = anthropic.Anthropic(max_retries=4, timeout=60)
-        response = self._client.messages.parse(
-            model=MODEL,
-            max_tokens=200,
-            output_config={"effort": "low"},
-            system=SAME_SYSTEM,
-            messages=[{"role": "user", "content": f"Notice 1:\n{describe(a)}\n\nNotice 2:\n{describe(b)}"}],
-            output_format=Same,
-        )
-        if response.parsed_output is None:
-            raise ValueError(f"no answer (stop reason: {response.stop_reason})")
-        return response.parsed_output.same
 
     def run(self, recalls: Iterable[RecallInfo], earlier: Dict[str, dict]) -> None:
         """Gives each recall a verdict, reusing earlier ones. A recall that can't be checked today stays unchecked

@@ -10,10 +10,6 @@ class RecallInfo(BaseModel):
     country_sold_in: str  # e.g., "DE", "US"
     location_sold_in: Optional[List[str]] = None  # e.g. states or cities
     source: str  # e.g., "Lebensmittelwarnung", "FDA"
-    # False for recalls from a non-official source (retailers' recalls collected by a news site); None means official.
-    official: Optional[bool] = None
-    # For a non-official recall: which official recalls Claude compared it with, and whether they were the same.
-    checked_with: Optional[Dict[str, bool]] = None
     reason: Optional[Union[str, Dict[str, str]]] = None
     company: Optional[str] = None
     annotation: Optional[Union[str, Dict[str, str]]] = None

@@ -39,25 +39,3 @@ def test_folded_reports_are_compared_again_next_run():
     first = fold([recall("sg1", "Earthsound Plush Bear", "EU Safety Gate", 2), recall("uk1", "Earthsound Plush Bear (2510-0212)", "UK OPSS", 1)])
     again = fold([RecallInfo.model_validate(r.model_dump(mode="json")) for r in first])
     assert len(again) == 1 and again[0].id == "sg1" and [a.id for a in again[0].also] == ["uk1"]
-
-
-def test_retailer_recall_is_checked_with_claude_once():
-    official = recall("lmw", "BEBA- und ALFAMINO-Produkte", "Lebensmittelwarnung.de", 14, "Nestlé Deutschland AG", en="BEBA and ALFAMINO products (Kaufland update)")
-    retail = recall("pw", "erneut zurückgerufene BEBA Babynahrung", "Produktwarnung.eu", 13, "Kaufland", en="BEBA baby food recalled again")
-    retail.official = False
-    other = recall("pw2", "Holz Stapelspiele", "Produktwarnung.eu", 13, "TEDi")
-    other.official = False
-    asked = []
-
-    def confirm(a, b):
-        asked.append((a.id, b.id))
-        return True
-
-    out = fold([official, retail, other], confirm=confirm)
-    assert asked == [("pw", "lmw")]  # the toy shares no word with the formula notice
-    head = next(r for r in out if r.id == "lmw")
-    assert [a.id for a in head.also] == ["pw"]
-    assert head.also[0].checked_with == {"lmw": True}
-    # Next run: the answer is reused.
-    again = fold([RecallInfo.model_validate(r.model_dump(mode="json")) for r in out], confirm=confirm)
-    assert len(asked) == 1 and len(again) == 2
