@@ -12,6 +12,7 @@ import { companyName, getLocal, regionName, shortId } from '../src/share.js'
 import { LANG_DIR, SITE, homePath, recallPath, statsPath } from '../src/paths.js'
 import { computeStats, ranges, REGIONS } from '../src/stats.js'
 import { alloSites } from '../src/allo.js'
+import { manifest, manifestPath } from '../src/manifest.js'
 
 const PAGE = 24
 
@@ -69,6 +70,7 @@ function page(template, { lang, path, title, description, alternates, body, json
     .replace(/<html lang="[^"]*">/, `<html lang="${HREFLANG[lang]}">`)
     .replace(/<title>.*?<\/title>/s, '')
     .replace(/<meta name="description"[^>]*>/, '')
+    .replace(/<link rel="manifest" href="[^"]*"/, `<link rel="manifest" href="${manifestPath(lang)}"`)
     .replace('</head>', `    ${head}\n  </head>`)
     .replace('<div id="app"></div>', `<div id="app">${body}${family(lang)}</div>`)
 }
@@ -105,6 +107,8 @@ await writeFile(join(DIST, '404.html'), template)
 
 for (const lang of LANGS) {
   const t = translations[lang]
+  await mkdir(join(DIST, homePath(lang)), { recursive: true })
+  await writeFile(join(DIST, manifestPath(lang)), JSON.stringify(manifest(lang), null, 1))
   const path = homePath(lang)
   const title = `${t.title} · ${plain(t.hero)}`
   const description = `${t.subtitle} ${recalls.length ? t.count.replace('{n}', recalls.length) + '.' : ''}`.trim()
