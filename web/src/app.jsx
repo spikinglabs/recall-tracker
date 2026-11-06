@@ -11,6 +11,8 @@ import { homePath, parsePath, recallPath, statsPath } from './paths.js'
 import { translations } from './translations'
 import { Icon } from './icons'
 import { alloSites } from './allo.js'
+import { manifestPath } from './manifest.js'
+import { InstallButton, InstallHint } from './components/Install'
 import '@fontsource/atkinson-hyperlegible/400.css'
 import '@fontsource/atkinson-hyperlegible/700.css'
 import '@fontsource/barlow-semi-condensed/700.css'
@@ -121,6 +123,9 @@ export function App() {
     document.documentElement.lang = lang === 'zh-CN' ? 'zh-Hans' : lang
     const tl = translations[lang] || translations.en
     document.title = onStats ? `${tl.statsTitle} · ${tl.title}` : tl.title
+    // Installing from here opens the app in this language next time.
+    const m = document.querySelector('link[rel="manifest"]')
+    if (m) m.setAttribute('href', manifestPath(lang))
   }, [lang])
 
   const langMenu = useRef(null)
@@ -250,6 +255,7 @@ export function App() {
             </details>
           </div>
         </header>
+        <InstallHint t={t} />
 
         {onStats ? <Stats recalls={recalls} loading={loading} t={t} lang={lang} /> : (<>
         <section class="ask">
@@ -294,6 +300,7 @@ export function App() {
               <li key={site.id}><a href={site.url}><b>{site.name}</b><span>{t.allo[site.id]}</span></a></li>
             ))}
           </ul>
+          <InstallButton t={t} />
         </footer>
       </div>
       <PosterSheet recall={poster} t={t} lang={lang} onClose={() => setPoster(null)} />

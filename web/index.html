@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Allo Recalls" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="description" content="Recalls of baby and children's products in Germany and the US, from official sources, checked every day." />
     <meta name="theme-color" content="#ffcc00" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#121314" media="(prefers-color-scheme: dark)" />
@@ -19,6 +21,23 @@
         document.documentElement.dataset.theme = c;
         document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) { m.content = c === "dark" ? "#121314" : "#ffcc00"; });
       })();
+    </script>
+    <script>
+      // Catch Chrome's install offer as early as possible; the app may start after it fires (src/install.js).
+      addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.__rtInstall = e; dispatchEvent(new Event("rt:installable")); });
+      // Safety net, as on Allo Outings: if the page arrived without its styles (an outdated saved copy), stop the
+      // service worker, drop every saved copy, fetch the style files afresh and load the page once more.
+      addEventListener("load", function () {
+        if (!document.querySelector('link[rel="stylesheet"]') || getComputedStyle(document.documentElement).getPropertyValue("--ink")) return;
+        try { if (sessionStorage.getItem("rt-restyle-v1")) return; sessionStorage.setItem("rt-restyle-v1", "1"); } catch (e) { return; }
+        var sheets = [].map.call(document.querySelectorAll('link[rel="stylesheet"]'), function (l) { return l.href; });
+        var sw = navigator.serviceWorker;
+        Promise.all([
+          sw ? sw.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }) : 0,
+          window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }) : 0,
+        ].concat(sheets.map(function (h) { return fetch(h, { cache: "reload" }).catch(function () {}); })))
+          .catch(function () {}).then(function () { location.reload(); });
+      });
     </script>
   </head>
   <body>

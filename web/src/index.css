@@ -200,3 +200,13 @@ h1, h2, h3, p, .meta, .orig { overflow-wrap: anywhere; }
 .family a span { color: var(--ink-soft); font-size: .88rem; }
 .btn.more { display: flex; width: 100%; margin-top: 14px; background: var(--card); }
 .btn.more:hover { background: var(--gold-bg); }
+
+/* Installing as an app (src/components/Install.jsx), as on Allo Outings. */
+/* phones only: a quiet, dismissible "add to home screen" line under the header */
+.app-hint { display: flex; align-items: center; gap: 8px; margin: 2px 0 10px; padding: 6px 6px 6px 10px; border-radius: 10px; background: var(--tint); color: var(--ink-soft); font-size: .8rem; line-height: 1.35; }
+.app-hint-text { flex: 1; }
+.app-hint-go { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 8px; padding: 4px 10px; font-weight: 700; font-size: .78rem; cursor: pointer; }
+.app-hint-x { border: 0; background: none; color: var(--ink-soft); font-size: 1.15rem; line-height: 1; padding: 4px 8px; cursor: pointer; border-radius: 8px; }
+.install { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.install-btn { background: var(--gold); color: var(--gold-ink); border-color: var(--gold-ink); }
+.install-how { color: var(--ink-soft); font-size: .88rem; }
