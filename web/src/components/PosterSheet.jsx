@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 import { IN_WECHAT, copy, posterPng, recallLink, recallText, rednoteText, shortId } from '../share'
+import { track } from '../track.js'
 
 // "Poster": the recall as a picture, drawn when the box opens so the share button hands the phone a ready
 // file (Safari drops a share that waits). Many apps drop the text that comes with a picture, so it goes on
@@ -48,6 +49,7 @@ export function PictureSheet({ job, t, lang, onClose }) {
 
     // Rednote gets its own text, without the link; every other app gets the link.
     const share = async (xhs) => {
+        track(xhs ? 'poster_rednote' : 'poster_share')
         const text = xhs ? job.xhs() : job.text()
         // Both start in the same tick as the tap: Safari refuses either one after a wait.
         const copied = copy(text)

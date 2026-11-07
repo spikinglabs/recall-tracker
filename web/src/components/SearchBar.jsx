@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'preact/hooks'
 import { Icon } from '../icons'
+import { track } from '../track.js'
 
 // The search box, then the product types as chips, as on Allo Outings. The country is set once in the header.
 export function SearchBar({ onScan, query, onSearch, onSaveHistory, searchHistory, categories, categoryCounts, selectedCategory, onCategoryChange, t, lang }) {
@@ -72,7 +73,7 @@ export function SearchBar({ onScan, query, onSearch, onSaveHistory, searchHistor
             {categories.length > 1 && (
                 <div class="filters" role="group" aria-label={t.allCategories}>
                     {categories.map(c => (
-                        <button key={c} type="button" class="chip" aria-pressed={category === c ? 'true' : 'false'} onClick={() => onCategoryChange(c)}>
+                        <button key={c} type="button" class="chip" aria-pressed={category === c ? 'true' : 'false'} onClick={() => { onCategoryChange(c); track('category') }}>
                             {c === 'All' ? t.allCategories : (t.categories[c] || c)}
                             {c !== 'All' && <span class="n">{categoryCounts[c] || 0}</span>}
                         </button>

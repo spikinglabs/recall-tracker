@@ -6,6 +6,7 @@ import { PictureSheet } from './PosterSheet'
 import { regionName } from '../share'
 import { homePath } from '../paths.js'
 import { Icon } from '../icons'
+import { track } from '../track.js'
 
 // The statistics page (/stats/): a time range, then one card per chart, each with its takeaway and a poster
 // button (statsPoster.js) to share it as a picture. One colour per chart, the top value in red, numbers written out.
@@ -31,7 +32,7 @@ const Card = ({ kind, s, t, lang, onPoster, children, note }) => {
         <section class="chart">
             <div class="chart-head">
                 <h2>{chartTitle(kind, s, t)}</h2>
-                <button type="button" class="btn icon" title={t.statsPoster} onClick={() => onPoster(kind)}>
+                <button type="button" class="btn icon" title={t.statsPoster} onClick={() => { track('stats_poster'); onPoster(kind) }}>
                     <Icon name="image" /><span>{t.statsPoster}</span>
                 </button>
             </div>
@@ -92,7 +93,7 @@ export function Stats({ recalls, loading, t, lang }) {
                     <section class="chart hero-card">
                         <div class="chart-head">
                             <p class="period">{periodText(range, lang)}</p>
-                            <button type="button" class="btn icon" title={t.statsPoster} onClick={() => setPoster('overview')}>
+                            <button type="button" class="btn icon" title={t.statsPoster} onClick={() => { track('stats_poster'); setPoster('overview') }}>
                                 <Icon name="image" /><span>{t.statsPoster}</span>
                             </button>
                         </div>
