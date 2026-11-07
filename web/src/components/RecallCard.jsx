@@ -2,6 +2,7 @@
 import { useState } from 'preact/hooks'
 import { Icon } from '../icons'
 import { companyName, copy, getLocal, recallLink, recallText, regionName, shareText } from '../share'
+import { track } from '../track.js'
 
 // A recall published in the last two weeks that the tracker found in the last week. (Every recall has a
 // first_seen of 1 Nov 2026 or later, when the archive started, so first_seen alone would mark them all new.)
@@ -27,11 +28,13 @@ function ShareRow({ recall, t, lang, onPoster }) {
     const flash = (key) => { setDone(key); setTimeout(() => setDone(null), 2500) }
     const link = () => recallLink(recall, lang)
     const share = async () => {
+        track('share')
         const r = await shareText({ title: t.recallTag, text: recallText(recall, t, lang), url: link() })
         if (r === 'copied') flash('share')
         else if (r === 'failed') prompt(t.copyLink, link())
     }
     const copyLink = async () => {
+        track('copy_link')
         if ((await copy(link())) === 'copied') flash('link'); else prompt(t.copyLink, link())
     }
     return (

@@ -1,5 +1,6 @@
 // Installing the site as an app, as on Allo Outings (src/scripts/app.ts there): the service worker,
 // Chrome's install offer (caught early in index.html), and whether the app is already installed.
+import { track } from './track.js'
 const local = (k, v) => { try { return v === undefined ? localStorage.getItem(k) : (localStorage.setItem(k, v), v) } catch { return null } }
 
 export const standalone = typeof window !== 'undefined' &&
@@ -37,7 +38,7 @@ export async function install() {
   emit()
   await ev.prompt()
   const choice = await ev.userChoice.catch(() => null)
-  if (choice?.outcome === 'accepted') { state.installed = true; local(HINT_KEY, 'off'); emit() }
+  if (choice?.outcome === 'accepted') { track('install'); state.installed = true; local(HINT_KEY, 'off'); emit() }
   return choice?.outcome === 'accepted'
 }
 
