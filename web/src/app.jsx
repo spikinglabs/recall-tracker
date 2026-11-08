@@ -4,6 +4,7 @@ import { SearchBar } from './components/SearchBar'
 import { PosterSheet } from './components/PosterSheet'
 import { shortId, typedCode } from './share'
 import { parseQuery, search } from './match.js'
+import { track } from './track.js'
 import { History } from './components/History'
 import { Scanner } from './components/Scanner'
 import { Stats } from './components/Stats'
@@ -128,6 +129,20 @@ export function App() {
     if (m) m.setAttribute('href', manifestPath(lang))
   }, [lang])
 
+  // Anonymous usage counts (src/track.js): one 'open' per page load, and a search once it has
+  // settled for 2 s (not the query restored from last time).
+  useEffect(() => { track(onStats ? 'open_stats' : onlyId ? 'open_shared' : 'open') }, [])
+  const firstQuery = useRef(searchQuery)
+  useEffect(() => {
+    const q = searchQuery.trim()
+    if (!q || q === firstQuery.current) return
+    const id = setTimeout(() => {
+      const p = parseQuery(q)
+      track(/https?:\/\//i.test(q) ? 'search_link' : p.barcode ? 'search_barcode' : 'search')
+    }, 2000)
+    return () => clearTimeout(id)
+  }, [searchQuery])
+
   const langMenu = useRef(null)
   const countryMenu = useRef(null)
   const flipTheme = () => {
@@ -235,7 +250,7 @@ export function App() {
                 </summary>
                 <div class="lang-menu">
                   {uniqueCountries.map(c => (
-                    <button key={c} type="button" aria-current={selectedCountry === c ? 'true' : 'false'} onClick={() => { setSelectedCountry(c); countryMenu.current.open = false }}>
+                    <button key={c} type="button" aria-current={selectedCountry === c ? 'true' : 'false'} onClick={() => { setSelectedCountry(c); track('country'); countryMenu.current.open = false }}>
                       {c === 'All' ? `🌍 ${t.allCountries}` : `${flag(c)} ${regionName(c, lang)}`}
                     </button>
                   ))}
@@ -249,7 +264,7 @@ export function App() {
               </summary>
               <div class="lang-menu">
                 {LANGS.map(([code, name]) => (
-                  <button key={code} type="button" aria-current={lang === code ? 'true' : 'false'} onClick={() => { setLang(code); langMenu.current.open = false }}>{name}</button>
+                  <button key={code} type="button" aria-current={lang === code ? 'true' : 'false'} onClick={() => { setLang(code); track('language'); langMenu.current.open = false }}>{name}</button>
                 ))}
               </div>
             </details>
@@ -262,7 +277,7 @@ export function App() {
           <Hero text={t.hero} />
           <p class="sub">{t.subtitle}</p>
           <SearchBar
-            onScan={() => setScanning(true)}
+            onScan={() => { setScanning(true); track('scan') }}
             query={searchQuery}
             onSearch={handleSearch}
             onSaveHistory={handleSaveToHistory}
@@ -286,7 +301,7 @@ export function App() {
           </div>
           {error && <p class="empty">{t.error} {error}</p>}
           {!loading && !error && (
-            <RecallList key={`${searchQuery}|${selectedCountry}|${activeCategory}|${sharedRecall?.id || ''}`} recalls={shown} t={t} lang={lang} onPoster={setPoster} only={!!sharedRecall} />
+            <RecallList key={`${searchQuery}|${selectedCountry}|${activeCategory}|${sharedRecall?.id || ''}`} recalls={shown} t={t} lang={lang} onPoster={(r) => { track('poster'); setPoster(r) }} only={!!sharedRecall} />
           )}
         </section>
         {!loading && !sharedRecall && (
@@ -301,10 +316,11 @@ export function App() {
             ))}
           </ul>
           <InstallButton t={t} />
+          <p class="privacy-note">{t.privacyNote}</p>
         </footer>
       </div>
       <PosterSheet recall={poster} t={t} lang={lang} onClose={() => setPoster(null)} />
-      <Scanner open={scanning} t={t} onClose={() => setScanning(false)} onCode={(code) => { setScanning(false); setSearchQuery(code); handleSaveToHistory(code) }} />
+      <Scanner open={scanning} t={t} onClose={() => setScanning(false)} onCode={(code) => { setScanning(false); track('scan_found'); setSearchQuery(code); handleSaveToHistory(code) }} />
     </>
   )
 }
