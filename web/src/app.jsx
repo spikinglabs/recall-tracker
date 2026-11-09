@@ -4,7 +4,7 @@ import { SearchBar } from './components/SearchBar'
 import { PosterSheet } from './components/PosterSheet'
 import { shortId, typedCode } from './share'
 import { parseQuery, search } from './match.js'
-import { track } from './track.js'
+import { track, whenPresent } from './track.js'
 import { History } from './components/History'
 import { Scanner } from './components/Scanner'
 import { Stats } from './components/Stats'
@@ -131,7 +131,7 @@ export function App() {
 
   // Anonymous usage counts (src/track.js): one 'open' per page load, and a search once it has
   // settled for 2 s (not the query restored from last time).
-  useEffect(() => { track(onStats ? 'open_stats' : onlyId ? 'open_shared' : 'open') }, [])
+  useEffect(() => { whenPresent(() => track(onStats ? 'open_stats' : onlyId ? 'open_shared' : 'open')) }, [])
   const firstQuery = useRef(searchQuery)
   useEffect(() => {
     const q = searchQuery.trim()
