@@ -19,7 +19,6 @@ const PAGE = 24
 const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist')
 const DATA = [
   'https://recalls-api.allo.land/baby/scraped_date%3Dlatest/',
-  'https://pub-f36c3831e82845e4af2d54940ea6c32d.r2.dev/baby/scraped_date%3Dlatest/',
 ]
 const LANGS = Object.keys(LANG_DIR)
 const HREFLANG = { en: 'en', de: 'de', es: 'es', fr: 'fr', 'zh-CN': 'zh-Hans' }

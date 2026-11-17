@@ -20,10 +20,9 @@ import '@fontsource/barlow-semi-condensed/700.css'
 import '@fontsource-variable/bricolage-grotesque/opsz.css'
 import './index.css'
 
-// The data's address, then the old r2.dev bucket in case the new one can't be reached.
+// The data's address.
 const DATA_BASES = [
   'https://recalls-api.allo.land/baby/scraped_date%3Dlatest/',
-  'https://pub-f36c3831e82845e4af2d54940ea6c32d.r2.dev/baby/scraped_date%3Dlatest/',
 ]
 const fetchJson = async (name) => {
   let lastError

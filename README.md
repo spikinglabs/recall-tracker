@@ -1,14 +1,12 @@
 # recall-tracker
 Collects recalls of baby and children's products every day (US CPSC, US FDA, Lebensmittelwarnung.de, EU Safety Gate, UK OPSS) into one public
-JSON file on Cloudflare R2, and shows them at https://recalls.allo.land/ (formerly tracker.babybaras.com, which
-redirects there). Allo Auri reads the same file.
+JSON file on Cloudflare R2, and shows them at https://recalls.allo.land/. Allo Auri reads the same file.
 
 ## Files published each day
 
 At `https://recalls-api.allo.land/baby/scraped_date=latest/` (the R2 bucket `recall-tracker-data` in the Cloudflare
-account that holds allo.land, on its custom domain; dated copies under `scraped_date=YYYY-MM-DD/`). Until every reader
-has moved, the job also writes the old bucket behind `pub-f36c3831e82845e4af2d54940ea6c32d.r2.dev`. Browsers can read them from the origins in the bucket's CORS
-policy.
+account that holds allo.land, on its custom domain; dated copies under `scraped_date=YYYY-MM-DD/`). Browsers can read them from the origins in
+the bucket's CORS policy. (Until 2026-11-17 the job also wrote an older bucket on r2.dev; it is no longer updated.)
 
 
 - `processed.json`: the recalls. Recalls stay listed for 2 years after publication, also after they leave their source
