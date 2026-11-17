@@ -6,8 +6,8 @@ redirects there). Allo Auri reads the same file.
 ## Files published each day
 
 At `https://recalls-api.allo.land/baby/scraped_date=latest/` (the R2 bucket `recall-tracker-data` in the Cloudflare
-account that holds allo.land, on its custom domain; dated copies under `scraped_date=YYYY-MM-DD/`). Until every reader
-has moved, the job also writes the old bucket behind `pub-f36c3831e82845e4af2d54940ea6c32d.r2.dev`. Browsers can read them from the origins in the bucket's CORS
+account that holds allo.land, on its custom domain; dated copies under `scraped_date=YYYY-MM-DD/`). The old bucket behind
+`pub-f36c3831e82845e4af2d54940ea6c32d.r2.dev` was written until November 2026 and is no longer updated. Browsers can read them from the origins in the bucket's CORS
 policy.
 
 

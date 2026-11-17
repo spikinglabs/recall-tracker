@@ -57,31 +57,8 @@ jobs:
             data/excluded.json
             data/status.json
           
-      - name: Upload to Cloudflare R2
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: auto
-        run: |
-          SCRAPED_DATE=$(date -u +"%Y-%m-%d")
-          aws s3 cp \
-            data/processed.json \
-            s3://${{ vars.R2_BUCKET_NAME }}/baby/scraped_date=$SCRAPED_DATE/processed.json \
-            --endpoint-url https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
-          aws s3 cp \
-            data/processed.json \
-            s3://${{ vars.R2_BUCKET_NAME }}/baby/scraped_date=latest/processed.json \
-            --endpoint-url https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
-          for f in excluded.json status.json; do
-            aws s3 cp \
-              data/$f \
-              s3://${{ vars.R2_BUCKET_NAME }}/baby/scraped_date=latest/$f \
-              --endpoint-url https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
-          done
-
-      # The same files in the bucket behind https://recalls-api.allo.land (Cloudflare account that holds allo.land).
-      # Skipped until the R2_ALLO_* settings exist. The step above keeps the old r2.dev bucket current for readers
-      # that haven't moved yet.
+      # The bucket behind https://recalls-api.allo.land (Cloudflare account that holds allo.land). Since November 2026
+      # this is the only copy: the old r2.dev bucket in the leima137 account is no longer written.
       - name: Upload to the allo.land R2 bucket
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ALLO_ACCESS_KEY_ID }}
@@ -92,8 +69,8 @@ jobs:
           ACCOUNT_ID: ${{ vars.R2_ALLO_ACCOUNT_ID || secrets.R2_ALLO_ACCOUNT_ID }}
         run: |
           if [ -z "$ACCOUNT_ID" ] || [ -z "$AWS_ACCESS_KEY_ID" ]; then
-            echo "::warning::R2_ALLO_ACCOUNT_ID or R2_ALLO_ACCESS_KEY_ID is not set; skipping the allo.land bucket."
-            exit 0
+            echo "::error::R2_ALLO_ACCOUNT_ID or R2_ALLO_ACCESS_KEY_ID is not set, so the recalls can't be published."
+            exit 1
           fi
           ENDPOINT="https://$ACCOUNT_ID.r2.cloudflarestorage.com"
           SCRAPED_DATE=$(date -u +"%Y-%m-%d")
