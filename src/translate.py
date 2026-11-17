@@ -14,11 +14,9 @@ import httpx
 from deep_translator import GoogleTranslator
 
 LANGS = ["en", "de", "es", "fr", "zh-CN"]
-# Where the latest published files are read back from: the allo.land bucket first, then the old r2.dev bucket
-# (still written while readers move over, and the only copy before the first run that writes the new bucket).
+# Where the latest published files are read back from.
 LATEST = [
     "https://recalls-api.allo.land/baby/scraped_date%3Dlatest/",
-    "https://pub-f36c3831e82845e4af2d54940ea6c32d.r2.dev/baby/scraped_date%3Dlatest/",
 ]
 
 

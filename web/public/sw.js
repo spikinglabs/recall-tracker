@@ -6,7 +6,7 @@
 //                  A saved page is only reused while the styles and scripts it names are saved too.
 //   /assets/ (fonts included), /icons/ → cache first (Vite's file names change when the content does).
 //                  Only real CSS/JS/images are kept: the host answers a missing old file with an HTML page.
-//   the recall data (recalls-api.allo.land, the old r2.dev bucket) → network first, the last copy after
+//   the recall data (recalls-api.allo.land) → network first, the last copy after
 //                  4 s or when offline, so an installed app still shows the list without a connection.
 //   anything else, and anything not GET → straight to the network, never cached
 const VERSION = "v1";
@@ -15,7 +15,7 @@ const PAGES = `pages-${VERSION}`;
 const STATIC = `static-${VERSION}`;
 const DATA = `data-${VERSION}`;
 const MAX_PAGES = 60;
-const DATA_HOSTS = ["recalls-api.allo.land", "pub-f36c3831e82845e4af2d54940ea6c32d.r2.dev"];
+const DATA_HOSTS = ["recalls-api.allo.land"];
 
 self.addEventListener("install", () => self.skipWaiting());
 
