@@ -1,0 +1,134 @@
+{
+  "spec": "dataherb/v2",
+  "id": "baby-product-recalls",
+  "name": "Recalls of baby and children's products",
+  "description": "Recalls of baby and children's products collected every day from US CPSC, US FDA, Lebensmittelwarnung.de, EU Safety Gate and UK OPSS, classified as children's products by Claude Haiku, translated, and de-duplicated across sources. Recalls stay listed for two years after publication. Shown at https://recalls.allo.land/.",
+  "tags": [
+    "recalls",
+    "product-safety",
+    "children",
+    "baby",
+    "consumer"
+  ],
+  "owner": "spikinglabs",
+  "classification": "public",
+  "update_frequency": "P1D",
+  "source": "git",
+  "uri": "https://github.com/spikinglabs/recall-tracker",
+  "datapackage": {
+    "resources": [
+      {
+        "name": "recalls",
+        "path": "https://recalls-api.allo.land/baby/scraped_date=latest/processed.json",
+        "format": "json",
+        "mediatype": "application/json",
+        "description": "Current list of recalls (one JSON array). Dated copies are under scraped_date=YYYY-MM-DD/.",
+        "schema": {
+          "primaryKey": "id",
+          "fields": [
+            {
+              "name": "id",
+              "type": "string",
+              "description": "Stable short code, also used in the page URL (/r/<id>/)"
+            },
+            {
+              "name": "title",
+              "type": "string",
+              "description": "Title as published by the source"
+            },
+            {
+              "name": "url",
+              "type": "string",
+              "description": "Link to the recall on the source site"
+            },
+            {
+              "name": "publish_datetime",
+              "type": "string",
+              "description": "When the source published it"
+            },
+            {
+              "name": "publish_date",
+              "type": "string",
+              "description": "Publication date (YYYY-MM-DD)"
+            },
+            {
+              "name": "country_sold_in",
+              "type": "string",
+              "description": "Country or region the source covers"
+            },
+            {
+              "name": "location_sold_in",
+              "type": "string",
+              "description": "Where it was sold, when given"
+            },
+            {
+              "name": "source",
+              "type": "string",
+              "description": "Source: CPSC, FDA, Lebensmittelwarnung.de, EU Safety Gate or UK OPSS"
+            },
+            {
+              "name": "reason",
+              "type": "object",
+              "description": "Reason for the recall, per language"
+            },
+            {
+              "name": "title_i18n",
+              "type": "object",
+              "description": "Translated titles, per language"
+            },
+            {
+              "name": "company",
+              "type": "string",
+              "description": "Company or brand, when given"
+            },
+            {
+              "name": "codes",
+              "type": "array",
+              "description": "Barcodes and model numbers the source gives"
+            },
+            {
+              "name": "annotation",
+              "type": "string",
+              "description": "Note added by the tracker"
+            },
+            {
+              "name": "category",
+              "type": "string",
+              "description": "Product category given by the classifier"
+            },
+            {
+              "name": "for_children",
+              "type": "boolean",
+              "description": "Judged to be a baby or children's product"
+            },
+            {
+              "name": "rules",
+              "type": "integer",
+              "description": "Classification rules version"
+            },
+            {
+              "name": "also",
+              "type": "array",
+              "description": "The same product reported by other sources, folded into this recall"
+            },
+            {
+              "name": "first_seen",
+              "type": "string",
+              "description": "When the tracker first found it"
+            },
+            {
+              "name": "last_seen",
+              "type": "string",
+              "description": "When the tracker last found it at its source"
+            },
+            {
+              "name": "scraped_datetime",
+              "type": "string",
+              "description": "When this list was made"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
