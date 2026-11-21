@@ -101,3 +101,20 @@ jobs:
             exit 1
           fi
 
+      # Job status for the DataHerb catalog (dataherb.status/v1), served at
+      # https://recalls-api.allo.land/_dataherb/status/baby-product-recalls/latest.json.
+      # Runs last, so a failed source makes the status "failed" like the run. Never fails the run.
+      - name: Write DataHerb job status
+        if: always()
+        continue-on-error: true
+        uses: DataHerb/dataherb-explorer/.github/actions/emit-status@main
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ALLO_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_ALLO_SECRET_ACCESS_KEY }}
+          AWS_ENDPOINT_URL: https://${{ vars.R2_ALLO_ACCOUNT_ID || secrets.R2_ALLO_ACCOUNT_ID }}.r2.cloudflarestorage.com
+        with:
+          target: s3://${{ vars.R2_ALLO_BUCKET_NAME || 'recall-tracker-data' }}/_dataherb/status/
+          job-id: baby-product-recalls
+          status: ${{ job.status }}
+          expected-interval: P1D
+          datasets: baby-product-recalls
