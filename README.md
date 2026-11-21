@@ -53,3 +53,11 @@ Below the main list, the search also looks through `history.json`: ten years of 
 the UK and CPSC, plus everything in the main list, built by `src/history.py` after each scrape. It holds titles as
 published (not translated), brand, codes, date, source and link, and is stored gzipped in the allo.land bucket.
 The first runs read old Safety Gate reports 12 minutes at a time until all are in.
+
+## Licence
+
+The published recall data (the files under https://recalls-api.allo.land/baby/ and their
+translations and classifications) is licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Credit "Baby product recalls
+(spikinglabs)" and keep each recall's link to its source: US CPSC, US FDA,
+Lebensmittelwarnung.de, EU Safety Gate and UK OPSS. This covers the data only, not the code.

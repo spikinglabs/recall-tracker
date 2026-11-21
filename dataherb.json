@@ -11,11 +11,20 @@
     "consumer"
   ],
   "owner": "spikinglabs",
+  "license": "CC-BY-4.0",
+  "attribution": "Baby product recalls (spikinglabs), from US CPSC, US FDA, Lebensmittelwarnung.de, EU Safety Gate and UK OPSS",
   "classification": "public",
   "update_frequency": "P1D",
   "source": "git",
   "uri": "https://github.com/spikinglabs/recall-tracker",
   "datapackage": {
+    "licenses": [
+      {
+        "name": "CC-BY-4.0",
+        "path": "https://creativecommons.org/licenses/by/4.0/",
+        "title": "Creative Commons Attribution 4.0"
+      }
+    ],
     "resources": [
       {
         "name": "recalls",
