@@ -8,6 +8,8 @@ const DIR_LANG = Object.fromEntries(Object.entries(LANG_DIR).filter(([, d]) => d
 export const homePath = (lang) => (LANG_DIR[lang] ? `/${LANG_DIR[lang]}/` : '/')
 export const recallPath = (lang, code) => `${homePath(lang)}r/${code}/`
 export const statsPath = (lang) => `${homePath(lang)}stats/`
+// Imprint, privacy and disclaimer (written by scripts/legal.mjs): English, German and Chinese; others use English.
+export const legalPath = (lang) => (lang === 'de' ? '/de/legal/' : lang === 'zh-CN' ? '/zh/legal/' : '/legal/')
 
 /** The language a path names (null at the root, where the reader's choice applies) and the recall code in it. */
 export function parsePath(pathname) {

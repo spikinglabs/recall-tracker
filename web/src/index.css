@@ -199,6 +199,7 @@ h1, h2, h3, p, .meta, .orig { overflow-wrap: anywhere; }
 .family a { display: grid; gap: 2px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); color: var(--ink); text-decoration: none; }
 .family a:hover { border-color: var(--ink); }
 .family a span { color: var(--ink-soft); font-size: .88rem; }
+.family .privacy-note a { display: inline; padding: 0; border: 0; border-radius: 0; background: none; color: var(--ink-soft); text-decoration: underline; }
 .btn.more { display: flex; width: 100%; margin-top: 14px; background: var(--card); }
 .btn.more:hover { background: var(--gold-bg); }
 
