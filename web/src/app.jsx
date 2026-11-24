@@ -8,7 +8,7 @@ import { track, whenPresent } from './track.js'
 import { History } from './components/History'
 import { Scanner } from './components/Scanner'
 import { Stats } from './components/Stats'
-import { homePath, parsePath, recallPath, statsPath } from './paths.js'
+import { homePath, parsePath, recallPath, statsPath, legalPath } from './paths.js'
 import { translations } from './translations'
 import { Icon } from './icons'
 import { alloSites } from './allo.js'
@@ -316,6 +316,7 @@ export function App() {
           </ul>
           <InstallButton t={t} />
           <p class="privacy-note">{t.privacyNote}</p>
+          <p class="privacy-note"><a href={legalPath(lang)}>{t.legalLink}</a></p>
         </footer>
       </div>
       <PosterSheet recall={poster} t={t} lang={lang} onClose={() => setPoster(null)} />

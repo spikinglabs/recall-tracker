@@ -9,7 +9,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { translations } from '../src/translations.js'
 import { companyName, getLocal, regionName, shortId } from '../src/share.js'
-import { LANG_DIR, SITE, homePath, recallPath, statsPath } from '../src/paths.js'
+import { LANG_DIR, SITE, homePath, legalPath, recallPath, statsPath } from '../src/paths.js'
 import { computeStats, ranges, REGIONS } from '../src/stats.js'
 import { alloSites } from '../src/allo.js'
 import { manifest, manifestPath } from '../src/manifest.js'
@@ -42,7 +42,8 @@ const ld = (o) => JSON.stringify(o).replace(/</g, '\\u003c')
 
 // The other Allo sites, on every page.
 const family = (lang) => `<footer class="family"><h2>${esc(translations[lang].moreAllo)}</h2><ul>` +
-  alloSites(lang).map(x => `<li><a href="${x.url}"><b>${esc(x.name)}</b> <span>${esc(translations[lang].allo[x.id])}</span></a></li>`).join('') + '</ul></footer>'
+  alloSites(lang).map(x => `<li><a href="${x.url}"><b>${esc(x.name)}</b> <span>${esc(translations[lang].allo[x.id])}</span></a></li>`).join('') +
+  `</ul><p class="privacy-note"><a href="${legalPath(lang)}">${esc(translations[lang].legalLink)}</a></p></footer>`
 
 function page(template, { lang, path, title, description, alternates, body, jsonld, type = 'website', published }) {
   const url = SITE + path
